@@ -1,6 +1,6 @@
 // Entry point: orchestrates all modules (FR-01 – FR-30).
 
-import { getMRContext, fetchMRMeta } from './mrContext.js';
+import { getMRContext } from './mrContext.js';
 import { injectFetchInterceptor, waitForDiffsMetadata } from './apiInterceptor.js';
 import { loadGitattributes } from './gitattributesLoader.js';
 import { parseAllGitattributes } from './gitattributesParser.js';
@@ -9,6 +9,7 @@ import { syncIcons, removeAllIcons } from './iconInjector.js';
 import { hideAll, restoreAll } from './fileHider.js';
 import { markAsViewed } from './viewedMarker.js';
 import { startObserving, stopObserving } from './observer.js';
+import { SELECTORS } from './selectors.js';
 
 // Only activate on GitLab MR diffs pages (FR-01).
 const MR_DIFFS_RE = /\/-\/merge_requests\/\d+\/diffs/;
@@ -23,33 +24,59 @@ async function getToggles() {
   });
 }
 
+/**
+ * Waits for the GitLab diff container to appear in the DOM (FR-03).
+ * Resolves with the element when found, or null after a 5s timeout.
+ */
+function waitForDiffContainer(timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    const el = document.querySelector(SELECTORS.DIFF_CONTAINER);
+    if (el) { resolve(el); return; }
+
+    const observer = new MutationObserver(() => {
+      const found = document.querySelector(SELECTORS.DIFF_CONTAINER);
+      if (found) {
+        observer.disconnect();
+        clearTimeout(timer);
+        resolve(found);
+      }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    const timer = setTimeout(() => {
+      observer.disconnect();
+      resolve(null);
+    }, timeoutMs);
+  });
+}
+
 async function run() {
   if (!MR_DIFFS_RE.test(location.pathname)) return;
 
   // Inject fetch interceptor as early as possible (EC-07).
   injectFetchInterceptor();
 
-  // Get MR context.
-  let ctx = getMRContext();
-  if (!ctx || !ctx.projectId) return;
-
-  // Fetch source branch + SHA if not available from page context.
-  if (!ctx.sourceBranch) {
-    const meta = await fetchMRMeta(ctx.projectId, ctx.mrIid);
-    if (!meta) return;
-    ctx = { ...ctx, ...meta };
-  }
+  // Get MR context — async, handles gl global, DOM attrs, and REST API fallback.
+  const ctx = await getMRContext();
+  if (!ctx) return;
 
   const mrKey = `${ctx.projectId}:${ctx.mrIid}`;
   if (mrKey === _lastMRKey) return; // already initialised for this MR
+
+  // Wait for diff container before mutating DOM (FR-03).
+  const container = await waitForDiffContainer();
+  if (!container) {
+    console.warn('[unwrench] Diff container not found after 5s timeout — aborting.');
+    return;
+  }
 
   // Clean up state from any previous MR (NFR-08, EC-05).
   cleanup();
   _lastMRKey = mrKey;
 
-  // Wait for diffs metadata (provides blob SHAs).
+  // Fetch gitattributes + diffs metadata + toggles in parallel.
   const [gaFiles, diffsMetadata, toggles] = await Promise.all([
-    loadGitattributes(ctx.projectId, ctx.sourceBranch, ctx.sourceBranch),
+    loadGitattributes(ctx.projectId, ctx.sourceBranch, ctx.sourceSha),
     waitForDiffsMetadata(),
     getToggles(),
   ]);
@@ -128,15 +155,21 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
-// SPA navigation: re-run when URL changes (FR-02).
+// SPA navigation: re-run when URL changes (FR-02, NFR-08).
+// GitLab uses history.pushState so we need both popstate and DOM mutation observation.
 let _lastPath = location.pathname;
-const navObserver = new MutationObserver(() => {
+
+function onNavChange() {
   if (location.pathname !== _lastPath) {
     _lastPath = location.pathname;
     _lastMRKey = null; // force re-init
     run();
   }
-});
-navObserver.observe(document.body || document.documentElement, { childList: true, subtree: false });
+}
+
+window.addEventListener('popstate', onNavChange);
+
+const navObserver = new MutationObserver(onNavChange);
+navObserver.observe(document.documentElement, { childList: true, subtree: false });
 
 run();

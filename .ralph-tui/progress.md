@@ -110,6 +110,16 @@ after each iteration and it's included in prompts for context.
   - popup.js notifies the active tab's content script directly via `sendMessage` on toggle change, bypassing the background-mediated `chrome.storage.onChanged` path — ensures immediate live propagation (FR-30).
 ---
 
+## 2026-04-26 - unw-0bz.12
+- What was implemented: Wired `src/content/index.js` end-to-end orchestration. Fixed four bugs in the scaffold: (1) `getMRContext()` was called without `await` — it's async; (2) no diff-container readiness wait (FR-03) — added `waitForDiffContainer(5000ms)` using a MutationObserver with timeout; (3) `loadGitattributes` was passed `sourceBranch` as the sha cache key instead of `sourceSha`; (4) SPA navigation only had a DOM mutation watcher — added `window.addEventListener('popstate', ...)` for history.pushState-based navigation. Removed redundant `fetchMRMeta` import (getMRContext handles the fallback internally). `background.js` was already correct — listens for `chrome.storage.onChanged` and relays changes to all MR diffs tabs.
+- Files changed: `src/content/index.js`
+- **Learnings:**
+  - Always `await` async context functions — missing `await` on `getMRContext()` causes `ctx` to be a Promise object, failing all property accesses silently.
+  - `waitForDiffContainer` must observe `document.documentElement` (not `document.body`) during `document_idle` load — `<body>` may not exist yet when content script fires.
+  - GitLab SPA navigation uses `history.pushState`, which does NOT fire `popstate` on its own. You need BOTH a `popstate` listener (for back/forward) AND a DOM/URL polling observer (for pushState links). The combination catches all GitLab navigation patterns.
+  - The `sourceSha` cache key bug would silently cause the gitattributes to be re-fetched on every page load (different branch = different cache miss key), defeating FR-08.
+---
+
 ## 2026-04-26 - unw-0bz.10
 - What was implemented: `src/content/fileHider.js` — complete implementation of `hideGeneratedFiles(generatedPaths)` and `restoreHiddenFiles()`. Detaches tree entries and diff blocks from DOM, stores `{ parent, nextSibling }` refs for in-order restoration. Tags detached nodes with `data-unwrench-hidden` attribute to prevent double-hiding. Fixed guard so newly lazy-loaded nodes for already-tracked paths are also hidden (FR-26). Added spec-named exports alongside `hideAll`/`restoreAll` aliases used by index.js.
 - Files changed: `src/content/fileHider.js`

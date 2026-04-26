@@ -1,0 +1,98 @@
+# Iteration 11 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.11
+- **Task Title**: US-11: Popup UI — toggles, status line, host config, chrome.storage.sync persistence
+- **Description**: Implement the extension popup (FR-28 – FR-30, NFR-16, PRD §3.7).
+
+## Scope
+Files: `src/popup/popup.html`, `src/popup/popup.js`, `src/popup/popup.css`
+
+### UI elements required (FR-28):
+- Extension nam...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:14:38.963Z
+- **Ended At**: 2026-04-26T21:17:06.083Z
+- **Duration**: 2m 27s
+- **Input Tokens**: 60
+- **Output Tokens**: 7798
+- **Total Tokens**: 7858
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+I'll start by reading the progress file and the existing popup files to understand what's already there.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.html[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.css[0m
+Now let me check the content script's index.js and manifest to understand the messaging API:
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m
+I have a clear picture of what's needed. The scaffold has the basic structure but is missing:
+1. Host URL input (NFR-16)
+2. Version from `chrome.runtime.getManifest()`
+3. Real generated file count from content script (needs `GET_STATUS` message handler in index.js)
+4. `tabs` permission in manifest (for `chrome.tabs.query`)
+
+Let me implement all of these:
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.html[0m edit: "<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta ch..." → "<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta ch..."
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.js[0m "// Popup UI logic: reads/writes toggle state, shows MR status (FR-28 – FR-30, NFR-16).
+
+const toggleViewed = document.getElementById('toggle-viewed');
+const toggleHide = document.getElementById('toggl... (2517 chars)"
+Now add the host input styles to popup.css:
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.css[0m edit: ".note {
+  font-size: 11px;
+  color: #888;
+  border..." → ".host-row {
+  display: flex;
+  flex-direction: col..."
+Now add the `GET_STATUS` message handler to index.js and also wire up `gitlabHost` from storage:
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m edit: "// Listen for storage changes (FR-30).
+chrome.runt..." → "// Listen for messages from popup (FR-30).
+chrome...."
+Now add `tabs` permission to manifest.json (needed for `chrome.tabs.query` in popup):
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m edit: "  "permissions": ["storage", "scripting"]," → "  "permissions": ["storage", "scripting", "tabs"],"
+Now let me also wire up `gitlabHost` in `gitattributesLoader.js` so the host config is actually used for API calls:
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/gitattributesLoader.js[0m
+The loader uses relative paths that are same-origin on the GitLab page itself, so `gitlabHost` persists for user configuration and UX — no changes needed there. Let me now close the bead and update progress.md:
+[94m[Bash][0m Close bead unw-0bz.11 $ br close unw-0bz.11 --reason "Popup UI complete: toggles, host config, version from manifest, real g...
+[94m[Bash][0m Flush bead state to JSONL $ br sync --flush-only
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "## 2026-04-26 - unw-0bz.10" → "## 2026-04-26 - unw-0bz.11
+- What was implemented:..."
+Now save a memory of this session's work:
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.11: Popup UI — toggles, status line, host config, chrome.storage.sync persistence.
+
+## Discoveries
+- `chrome.tabs.sendMessage` with a `GET_STATUS` request to the content... (1784 chars)"
+<promise>COMPLETE</promise>
+
+Bead unw-0bz.11 is done. Here's what changed:
+
+**popup.html** — Added host URL input field; version `<p>` now populated by JS.
+
+**popup.js** — Full rewrite:
+- Version from `chrome.runtime.getManifest()`
+- Loads/saves `gitlabHost` in `chrome.storage.sync`
+- Queries the active tab via `chrome.tabs.sendMessage({ type: 'GET_STATUS' })` to display the real generated file count ("X generated files detected" / "Not on a GitLab MR page.")
+- Notifies the content script directly on toggle change for immediate live effect (FR-30)
+
+**popup.css** — Host input row styles added.
+
+**index.js** — Added `GET_STATUS` handler alongside the existing `STORAGE_CHANGED` handler.
+
+**manifest.json** — Added `"tabs"` permission (required for `chrome.tabs.query` in popup context).
