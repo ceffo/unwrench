@@ -3,10 +3,10 @@
   "sessionId": "413d0d5a-bc7c-4f54-9113-378791cc5022",
   "status": "running",
   "startedAt": "2026-04-26T20:52:31.209Z",
-  "updatedAt": "2026-04-26T21:12:52.214Z",
-  "currentIteration": 8,
+  "updatedAt": "2026-04-26T21:14:37.318Z",
+  "currentIteration": 9,
   "maxIterations": 20,
-  "tasksCompleted": 8,
+  "tasksCompleted": 9,
   "isPaused": false,
   "agentPlugin": "claude",
   "trackerState": {
@@ -65,8 +65,8 @@
       {
         "id": "unw-0bz.9",
         "title": "US-09: viewedMarker.js — write blob SHAs of generated files to GitLab localStorage",
-        "status": "open",
-        "completedInSession": false
+        "status": "completed",
+        "completedInSession": true
       },
       {
         "id": "unw-0bz.10",
@@ -174,6 +174,16 @@
       "durationMs": 152724,
       "startedAt": "2026-04-26T21:08:42.045Z",
       "endedAt": "2026-04-26T21:11:14.769Z"
+    },
+    {
+      "iteration": 9,
+      "status": "completed",
+      "taskId": "unw-0bz.9",
+      "taskTitle": "US-09: viewedMarker.js — write blob SHAs of generated files to GitLab localStorage",
+      "taskCompleted": true,
+      "durationMs": 95712,
+      "startedAt": "2026-04-26T21:11:16.461Z",
+      "endedAt": "2026-04-26T21:12:52.173Z"
     }
   ],
   "skippedTaskIds": [],

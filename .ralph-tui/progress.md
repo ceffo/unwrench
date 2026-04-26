@@ -99,3 +99,12 @@ after each iteration and it's included in prompts for context.
   - The toggle check (`autoViewed`) belongs in the orchestrator (`index.js`), not inside `markAsViewed` — keeps the marker module pure (just does the localStorage write).
 ---
 
+## 2026-04-26 - unw-0bz.10
+- What was implemented: `src/content/fileHider.js` — complete implementation of `hideGeneratedFiles(generatedPaths)` and `restoreHiddenFiles()`. Detaches tree entries and diff blocks from DOM, stores `{ parent, nextSibling }` refs for in-order restoration. Tags detached nodes with `data-unwrench-hidden` attribute to prevent double-hiding. Fixed guard so newly lazy-loaded nodes for already-tracked paths are also hidden (FR-26). Added spec-named exports alongside `hideAll`/`restoreAll` aliases used by index.js.
+- Files changed: `src/content/fileHider.js`
+- **Learnings:**
+  - Scaffold used `if (_hidden.has(filePath)) return` which would skip newly lazy-loaded nodes for an already-tracked path. Fix: check `!el.dataset.unwrenchHidden` on each candidate element instead of bailing early on the path key.
+  - `data-unwrench-hidden` attribute on the element (not just the Map key) is the right deduplication guard — the element-level attribute prevents double-hiding even if `hideForPath` is called multiple times for the same path.
+  - Path extraction needs `data-file-path` fallback in addition to `data-path` — GitLab 17.x uses both attribute names on different container elements (same pattern as iconInjector).
+  - Delete `el.dataset.unwrenchHidden` (not just set to empty) on restore so the attribute is cleanly removed from the DOM element if it gets re-added to the page.
+---

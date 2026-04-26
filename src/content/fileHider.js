@@ -2,53 +2,63 @@
 
 import { SELECTORS } from './selectors.js';
 
-// Map from filePath → { treeEntry: Element, diffBlock: Element, treeParent, treeNextSibling, diffParent, diffNextSibling }
+// Map from filePath → { treeEntry, treeParent, treeNextSibling, diffBlock, diffParent, diffNextSibling }
+// Tracks the most-recently removed element per path for in-order restoration.
 const _hidden = new Map();
 
 /**
  * Hides all generated files from the DOM.
- * Elements are detached (not just display:none) and stored for restoration.
+ * Elements are detached (not display:none) and stored for restoration (FR-24).
+ * Safe to call repeatedly — newly lazy-loaded nodes for tracked paths are also hidden (FR-26).
  * @param {Set<string>} generatedPaths
  */
-export function hideAll(generatedPaths) {
+export function hideGeneratedFiles(generatedPaths) {
   for (const path of generatedPaths) {
-    if (!_hidden.has(path)) hideForPath(path);
+    hideForPath(path);
   }
 }
 
+// Alias used by index.js scaffold.
+export const hideAll = hideGeneratedFiles;
+
 /**
- * Restores all previously hidden elements to their original DOM positions.
+ * Restores all previously hidden elements to their original DOM positions (FR-25).
  */
-export function restoreAll() {
+export function restoreHiddenFiles() {
   for (const [, nodes] of _hidden) {
-    restore(nodes);
+    _restore(nodes);
   }
   _hidden.clear();
 }
 
+// Alias used by index.js scaffold.
+export const restoreAll = restoreHiddenFiles;
+
 /**
  * Hides DOM nodes for a single generated file path.
+ * Uses data-unwrench-hidden attribute to prevent double-hiding the same element.
+ * Overwrites the tracked entry for each type so newly lazy-loaded nodes are captured.
  * @param {string} filePath
  */
 export function hideForPath(filePath) {
-  if (_hidden.has(filePath)) return;
-
-  const entry = { treeEntry: null, diffBlock: null };
+  const entry = _hidden.get(filePath) || {};
 
   document.querySelectorAll(SELECTORS.FILE_TREE_ENTRY).forEach(el => {
-    if (getPath(el) === filePath && !entry.treeEntry) {
+    if (_getPath(el) === filePath && !el.dataset.unwrenchHidden) {
       entry.treeParent = el.parentNode;
       entry.treeNextSibling = el.nextSibling;
       entry.treeEntry = el;
+      el.dataset.unwrenchHidden = 'true';
       el.remove();
     }
   });
 
   document.querySelectorAll(SELECTORS.DIFF_FILE_BLOCK).forEach(el => {
-    if (getPath(el) === filePath && !entry.diffBlock) {
+    if (_getPath(el) === filePath && !el.dataset.unwrenchHidden) {
       entry.diffParent = el.parentNode;
       entry.diffNextSibling = el.nextSibling;
       entry.diffBlock = el;
+      el.dataset.unwrenchHidden = 'true';
       el.remove();
     }
   });
@@ -58,17 +68,25 @@ export function hideForPath(filePath) {
   }
 }
 
-function restore({ treeEntry, treeParent, treeNextSibling, diffBlock, diffParent, diffNextSibling }) {
+function _restore({ treeEntry, treeParent, treeNextSibling, diffBlock, diffParent, diffNextSibling }) {
   if (treeEntry && treeParent) {
+    delete treeEntry.dataset.unwrenchHidden;
     treeParent.insertBefore(treeEntry, treeNextSibling || null);
   }
   if (diffBlock && diffParent) {
+    delete diffBlock.dataset.unwrenchHidden;
     diffParent.insertBefore(diffBlock, diffNextSibling || null);
   }
 }
 
-function getPath(el) {
-  return el.dataset.path || el.querySelector('[data-path]')?.dataset.path || null;
+function _getPath(el) {
+  return (
+    el.dataset.path ||
+    el.dataset.filePath ||
+    el.querySelector('[data-path]')?.dataset.path ||
+    el.querySelector('[data-file-path]')?.dataset.filePath ||
+    null
+  );
 }
 
 export function isHiding() {

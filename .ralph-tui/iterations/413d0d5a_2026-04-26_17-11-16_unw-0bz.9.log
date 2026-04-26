@@ -1,0 +1,81 @@
+# Iteration 9 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.9
+- **Task Title**: US-09: viewedMarker.js — write blob SHAs of generated files to GitLab localStorage
+- **Description**: Implement the module that auto-marks generated files as Viewed in GitLab's localStorage (FR-17 – FR-20, PRD §3.5, §5.5).
+
+## Scope
+Export:
+```js
+// generatedFiles: Array<{ filePath: string, blobId: st...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:11:16.461Z
+- **Ended At**: 2026-04-26T21:12:52.173Z
+- **Duration**: 1m 35s
+- **Input Tokens**: 55
+- **Output Tokens**: 5266
+- **Total Tokens**: 5321
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+I'll start by reading the progress file and existing codebase to understand patterns before implementing viewedMarker.js.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Glob][0m [95m/Users/moncefnaji/code/github.com/unwrench[0m pattern: [96msrc/content/*.js[0m
+Let me read the existing viewedMarker.js and index.js to understand what's already implemented.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/viewedMarker.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+Let me check mrContext.js to understand what fields it provides.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/mrContext.js[0m
+Now I have a clear picture. The existing `viewedMarker.js` has signature `(namespace, mrIid, blobShas)` but:
+1. The bead spec requires `(generatedFiles, mrPath)` where `generatedFiles` is `Array<{ filePath, blobId }>`
+2. `index.js` incorrectly calls `markAsViewed(ctx.namespace, ctx.mrIid, blobShas)` — but `ctx` has `mrPath`, not `namespace`
+
+I'll rewrite `viewedMarker.js` to match the spec and fix the call in `index.js`.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/viewedMarker.js[0m "// Writes blob SHAs of generated files to GitLab's localStorage Viewed array (FR-17 – FR-20).
+
+/**
+ * Marks the given generated files as Viewed in GitLab's localStorage.
+ * Reads the existing SHA arra... (961 chars)"
+Now fix the call in `index.js` — update it to pass the new signature `(generatedFiles, mrPath)`:
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m edit: "  if (_toggleState.autoViewed) {
+    const blobSha..." → "  if (_toggleState.autoViewed) {
+    const generat..."
+Now close the bead and sync:
+[94m[Bash][0m Close bead unw-0bz.9 $ deduplicates SHAs, never removes, key=code-review-<mrPath>"
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+Now append to progress.md:
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "  - `MutationObserver` with module-level state (fo..." → "  - `MutationObserver` with module-level state (fo..."
+Now save to engram memory and session summary:
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Rewrote `viewedMarker.js` with signature `markAsViewed(generatedFiles, mrPath)` per bead spec. Fixed `index.js` call site which used non-existent `ctx.namespace`.
+**Why**: Scaffold signature... (973 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.9: viewedMarker.js — write blob SHAs of generated files to GitLab localStorage.
+
+## Discoveries
+- Scaffold `markAsViewed(namespace, mrIid, blobShas)` signature was wrong... (1133 chars)"
+Done. Here's what changed:
+
+**`src/content/viewedMarker.js`** — rewritten with the correct spec signature:
+```js
+markAsViewed(generatedFiles: Array<{ filePath, blobId }>, mrPath: string)
+```
+- Extracts `blobId`s internally, filters nulls
+- Key: `code-review-${mrPath}` (direct, no reconstruction)
+- Deduplicates via `Set`, never removes existing SHAs (FR-20)
+
+**`src/content/index.js`** — fixed the broken call site:
+- Was: `markAsViewed(ctx.namespace, ctx.mrIid, blobShas)` — `ctx.namespace` doesn't exist on mrContext's return
+- Now: `markAsViewed(generatedFiles, ctx.mrPath)` — uses the actual `mrPath` field
+
+The toggle guard (`autoViewed`) stays in the orchestrator, keeping `markAsViewed` a pure localStorage writer.
+
+<promise>COMPLETE</promise>
