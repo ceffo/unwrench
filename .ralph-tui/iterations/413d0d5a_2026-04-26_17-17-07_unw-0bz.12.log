@@ -1,0 +1,77 @@
+# Iteration 12 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.12
+- **Task Title**: US-12: content/index.js + background.js — orchestration, SPA navigation, storage bridge
+- **Description**: Wire all content modules together into the main entry point, implement SPA navigation handling, and create the background service worker (FR-02, FR-03, NFR-08).
+
+## Scope
+
+### src/content/index.js (or...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:17:07.805Z
+- **Ended At**: 2026-04-26T21:19:37.282Z
+- **Duration**: 2m 29s
+- **Input Tokens**: 1966
+- **Output Tokens**: 7908
+- **Total Tokens**: 9874
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+I'll start by reading the progress file and current state of the codebase.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+Now let me check the background.js and other relevant files.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/background.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/observer.js[0m
+Let me check the mrContext.js to understand its async behavior.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/mrContext.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/iconInjector.js[0m
+Let me check the selectors.js to understand what's available for the diff container.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m
+I can see the issues in the current `index.js`:
+1. `getMRContext()` is called without `await` (it's async)
+2. No `waitForDiffContainer()` with 5s timeout (FR-03 requirement)
+3. `loadGitattributes` is passed `sourceBranch` as the sha cache key instead of `sourceSha`
+4. Missing `popstate` listener for SPA navigation
+5. `fetchMRMeta` is imported but redundant (getMRContext handles the fallback internally)
+
+Let me fix all of these:
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m "// Entry point: orchestrates all modules (FR-01 – FR-30).
+
+import { getMRContext } from './mrContext.js';
+import { injectFetchInterceptor, waitForDiffsMetadata } from './apiInterceptor.js';
+import { l... (5354 chars)"
+Now let me verify `background.js` is correct against the spec requirements:
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/background.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m
+Background.js and manifest.json look correct. Now let me close the bead, flush state, and update progress.md.
+[94m[Bash][0m Close bead unw-0bz.12 $ br close unw-0bz.12 --reason "Orchestration + SPA navigation wired: fixed async getMRContext, added ...
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "## 2026-04-26 - unw-0bz.10" → "## 2026-04-26 - unw-0bz.12
+- What was implemented:..."
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Fixed four bugs in src/content/index.js orchestrator and closed bead unw-0bz.12.
+1. `getMRContext()` called without `await` — returns Promise, all property accesses silently undefined.
+2. No... (1334 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.12: Wire src/content/index.js orchestration, SPA navigation, and background.js service worker.
+
+## Discoveries
+- `getMRContext()` was called without `await` in the scaff... (1682 chars)"
+Bead unw-0bz.12 is complete. Four bugs fixed in `src/content/index.js`:
+
+1. **`await getMRContext()`** — was called synchronously; `ctx` was a Promise, not the context object.
+2. **`waitForDiffContainer(5000ms)`** — added FR-03 readiness wait using a MutationObserver on `document.documentElement` with a 5s timeout fallback.
+3. **`sourceSha` cache key** — `loadGitattributes` was passed `sourceBranch` as the sha arg, silently defeating the session cache on every load.
+4. **`popstate` listener** — GitLab pushState navigation doesn't fire `popstate`; now both `popstate` (back/forward) and DOM mutation observation cover all SPA nav patterns.
+
+`background.js` and `manifest.json` were already correct. No other files changed.
+
+<promise>COMPLETE</promise>

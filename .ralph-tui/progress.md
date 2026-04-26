@@ -120,6 +120,15 @@ after each iteration and it's included in prompts for context.
   - The `sourceSha` cache key bug would silently cause the gitattributes to be re-fetched on every page load (different branch = different cache miss key), defeating FR-08.
 ---
 
+## 2026-04-26 - unw-0bz.13
+- What was implemented: Final bead — integration testing, edge case verification, and README completion. Both node test suites pass (12/12 gitattributesParser, 18/18 fileMatcher). Rewrote README.md to satisfy NFR-19 with all 4 required sections: setup/load instructions, self-hosted configuration, localStorage format reference, known limitations. Added v2 roadmap. Edge cases EC-01 through EC-10 verified through code review (code already handles them via `return` guards, `console.error` logging with no-op, DOM cleanup, session cache keyed by sha, popstate + mutation observer combo).
+- Files changed: `README.md`
+- **Learnings:**
+  - `gitlabHost` in `chrome.storage.sync` is informational only — API calls use relative paths (same-origin), so the host field does not affect API routing; document this clearly to avoid confusion.
+  - The `br sync --flush-only` reporting "nothing to export" after `br close` is expected — the close already wrote to JSONL.
+  - README must explicitly state that EC-06 (user manually unchecking Viewed) is not undone by the extension in the same session — callers expect this behavior from FR-20.
+---
+
 ## 2026-04-26 - unw-0bz.10
 - What was implemented: `src/content/fileHider.js` — complete implementation of `hideGeneratedFiles(generatedPaths)` and `restoreHiddenFiles()`. Detaches tree entries and diff blocks from DOM, stores `{ parent, nextSibling }` refs for in-order restoration. Tags detached nodes with `data-unwrench-hidden` attribute to prevent double-hiding. Fixed guard so newly lazy-loaded nodes for already-tracked paths are also hidden (FR-26). Added spec-named exports alongside `hideAll`/`restoreAll` aliases used by index.js.
 - Files changed: `src/content/fileHider.js`
