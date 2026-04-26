@@ -80,3 +80,13 @@ after each iteration and it's included in prompts for context.
   - All consumers use `SELECTORS.*` via the convenience object — no import changes needed.
 ---
 
+## 2026-04-26 - unw-0bz.8
+- What was implemented: `iconInjector.js` and `observer.js` fully implemented. `iconInjector.js`: uses `data-unwrench-icon="true"` attribute (spec requirement) instead of class-only for double-injection guard; exports both spec-named (`injectIcons`, `removeStaleIcons`) and scaffold-named (`injectAll`, `syncIcons`, `removeAllIcons`) functions so `index.js` imports are unbroken; path extraction tries `data-path`, `data-file-path`, and child element fallbacks. `observer.js`: module-level `startObserving`/`stopObserving` (for index.js) kept as primary API; added `startObserver`/`stopObserver` (caller-owned observer reference) as spec-named counterparts.
+- Files changed: `src/content/iconInjector.js`, `src/content/observer.js`
+- **Learnings:**
+  - When a scaffold already has an API used by `index.js`, add the spec-named exports as aliases rather than renaming — prevents breaking the orchestrator.
+  - Use `data-unwrench-icon` attribute (not just CSS class) for icon deduplication — the attribute approach is more explicit and aligns with the spec; querying `[data-unwrench-icon]` is equally efficient to `.class`.
+  - GitLab path extraction needs multiple fallbacks: `data-path`, `data-file-path`, and child `[data-path]` queries — different GitLab versions expose the path differently on tree row vs. diff header elements.
+  - `MutationObserver` with module-level state (for `startObserving`) vs. caller-owned state (for `startObserver`) serve different usage patterns; both patterns are valid depending on whether the caller or the module manages lifecycle.
+---
+

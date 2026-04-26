@@ -2,58 +2,57 @@
 
 import { SELECTORS } from './selectors.js';
 
-const ICON_CLASS = 'unwrench-icon';
+const ICON_ATTR = 'data-unwrench-icon';
 const ICON_TITLE = 'Generated file (gitlab-generated)';
-const ICON_HTML = '🔧';
 
 function createIcon() {
   const span = document.createElement('span');
-  span.className = ICON_CLASS;
-  span.title = ICON_TITLE;
+  span.setAttribute(ICON_ATTR, 'true');
   span.setAttribute('aria-hidden', 'true');
-  span.textContent = ICON_HTML;
+  span.title = ICON_TITLE;
+  span.textContent = '🔧';
   span.style.marginLeft = '4px';
   return span;
 }
 
-/**
- * Injects a wrench icon after the filename in the given element, if not already present.
- * @param {Element} el
- */
 function injectIntoElement(el) {
-  if (el.querySelector(`.${ICON_CLASS}`)) return;
+  if (el.querySelector(`[${ICON_ATTR}]`)) return;
   el.appendChild(createIcon());
 }
 
 /**
- * Removes icons from elements whose files are no longer generated (FR-16).
- * @param {Set<string>} generatedPaths
+ * Returns the file path associated with a file tree entry element.
+ * GitLab exposes path via data-path or data-file-path on the row root or a child.
  */
-export function syncIcons(generatedPaths) {
-  removeAllIcons();
-  injectAll(generatedPaths);
-}
-
-export function removeAllIcons() {
-  document.querySelectorAll(`.${ICON_CLASS}`).forEach(el => el.remove());
+function getPathFromTreeEntry(entry) {
+  return (
+    entry.dataset.path ||
+    entry.dataset.filePath ||
+    entry.querySelector('[data-path]')?.dataset.path ||
+    entry.querySelector('[data-file-path]')?.dataset.filePath ||
+    null
+  );
 }
 
 /**
- * Injects wrench icons for all generated files currently in the DOM.
- * @param {Set<string>} generatedPaths
+ * Returns the file path associated with a diff file header element.
+ * Falls back to the nearest .diff-file ancestor which typically carries data-path.
  */
-export function injectAll(generatedPaths) {
-  for (const path of generatedPaths) {
-    injectForPath(path);
-  }
+function getPathFromDiffHeader(header) {
+  return (
+    header.dataset.path ||
+    header.dataset.filePath ||
+    header.closest(SELECTORS.DIFF_FILE_BLOCK)?.dataset.path ||
+    header.closest(SELECTORS.DIFF_FILE_BLOCK)?.dataset.filePath ||
+    null
+  );
 }
 
 /**
- * Injects icons for a specific file path in any matching DOM elements.
+ * Injects wrench icons for a specific file path into any matching DOM elements.
  * @param {string} filePath
  */
 export function injectForPath(filePath) {
-  // File tree entries.
   document.querySelectorAll(SELECTORS.FILE_TREE_ENTRY).forEach(entry => {
     if (getPathFromTreeEntry(entry) === filePath) {
       const nameEl = entry.querySelector(SELECTORS.FILE_TREE_FILENAME) || entry;
@@ -61,7 +60,6 @@ export function injectForPath(filePath) {
     }
   });
 
-  // Diff file headers.
   document.querySelectorAll(SELECTORS.DIFF_FILE_HEADER).forEach(header => {
     if (getPathFromDiffHeader(header) === filePath) {
       const nameEl = header.querySelector(SELECTORS.DIFF_FILE_HEADER_FILENAME) || header;
@@ -70,14 +68,35 @@ export function injectForPath(filePath) {
   });
 }
 
-function getPathFromTreeEntry(entry) {
-  return entry.dataset.path || entry.querySelector('[data-path]')?.dataset.path || null;
+/**
+ * Injects wrench icons for all paths in generatedPaths that are currently in the DOM.
+ * @param {Set<string>} generatedPaths
+ */
+export function injectIcons(generatedPaths) {
+  for (const path of generatedPaths) {
+    injectForPath(path);
+  }
 }
 
-function getPathFromDiffHeader(header) {
-  return (
-    header.dataset.path ||
-    header.closest(SELECTORS.DIFF_FILE_BLOCK)?.dataset.path ||
-    null
-  );
+/** Alias for callers using the original scaffold name. */
+export const injectAll = injectIcons;
+
+/**
+ * Removes all injected icons from the DOM.
+ */
+export function removeAllIcons() {
+  document.querySelectorAll(`[${ICON_ATTR}]`).forEach(el => el.remove());
 }
+
+/**
+ * Removes icons for files no longer in currentGeneratedPaths, then re-injects
+ * icons for all current generated files (FR-16).
+ * @param {Set<string>} currentGeneratedPaths
+ */
+export function removeStaleIcons(currentGeneratedPaths) {
+  removeAllIcons();
+  injectIcons(currentGeneratedPaths);
+}
+
+/** Alias for callers using the original scaffold name. */
+export const syncIcons = removeStaleIcons;
