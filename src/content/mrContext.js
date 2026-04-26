@@ -1,35 +1,59 @@
-// Extracts MR metadata (project ID, source branch, MR IID) from the GitLab page.
+// Extracts MR metadata (project ID, source branch, MR IID, MR path, source SHA) from the GitLab page.
 
 /**
- * @returns {{ projectId: string, mrIid: string, sourceBranch: string, namespace: string } | null}
+ * Returns MR context for the current page, or null if not on an MR diffs page.
+ * Extraction order: gl global → meta/data attributes → REST API fallback.
+ *
+ * @returns {Promise<{ projectId: string, sourceBranch: string, mrIid: string, mrPath: string, sourceSha: string|null } | null>}
  */
-export function getMRContext() {
-  // GitLab exposes a `gl` global with project metadata on MR pages.
-  const gl = window.gl || {};
-
-  const projectId = gl.projectId || document.body?.dataset?.projectId;
-  if (!projectId) return null;
-
-  // Extract MR IID and namespace/project from the URL path.
-  // Path shape: /:namespace/:project/-/merge_requests/:iid/diffs
+export async function getMRContext() {
   const match = location.pathname.match(/^(\/[^/]+\/[^/]+)\/-\/merge_requests\/(\d+)/);
   if (!match) return null;
 
-  const namespace = match[1];
+  const namespace = match[1]; // e.g. /mygroup/myproject
   const mrIid = match[2];
+  const mrPath = `${namespace}/-/merge_requests/${mrIid}`;
 
-  // Source branch: try gl global first, then meta tag, then data attribute.
-  const sourceBranch =
+  const gl = window.gl || {};
+
+  let projectId =
+    gl.projectId ||
+    document.body?.dataset?.projectId ||
+    null;
+  if (projectId) projectId = String(projectId);
+
+  let sourceBranch =
     gl.mrMetadata?.sourceBranch ||
+    gl.mr?.sourceBranch ||
+    document.querySelector('meta[name="current-branch"]')?.content ||
     document.querySelector('meta[name="mr-source-branch"]')?.content ||
     document.body?.dataset?.mrSourceBranch ||
     null;
 
-  return { projectId: String(projectId), mrIid, namespace, sourceBranch };
+  let sourceSha =
+    gl.mrMetadata?.headSha ||
+    gl.mr?.headSha ||
+    null;
+
+  if (!projectId || !sourceBranch || !sourceSha) {
+    if (projectId) {
+      const meta = await fetchMRMeta(projectId, mrIid);
+      if (meta) {
+        sourceBranch = sourceBranch || meta.sourceBranch;
+        sourceSha = sourceSha || meta.sha;
+      }
+    }
+  }
+
+  if (!projectId || !sourceBranch) return null;
+
+  return { projectId, sourceBranch, mrIid, mrPath, sourceSha: sourceSha || null };
 }
 
 /**
- * Fetches source branch and sha from the MR API when the page context lacks them.
+ * Fetches source branch and sha from the MR REST API.
+ * Used as a fallback when the gl global or DOM attributes are incomplete.
+ *
  * @param {string} projectId
  * @param {string} mrIid
  * @returns {Promise<{ sourceBranch: string, sha: string } | null>}

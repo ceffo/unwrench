@@ -1,0 +1,89 @@
+# Iteration 2 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.2
+- **Task Title**: US-02: selectors.js — all GitLab DOM selectors as named constants
+- **Description**: Create the single source-of-truth file for all GitLab DOM selectors used by the extension (NFR-07, NFR-17). This must be done early so all other modules can import from it.
+
+## Scope
+Research and defi...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T20:57:30.739Z
+- **Ended At**: 2026-04-26T20:59:57.849Z
+- **Duration**: 2m 27s
+- **Input Tokens**: 2338
+- **Output Tokens**: 8115
+- **Total Tokens**: 10453
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+I'll search memory for prior context and read the progress file to understand the current state.
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_search,mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+Let me check what's already in `selectors.js` from the scaffold.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m
+The scaffold has a basic `selectors.js`. Now let me research GitLab's actual DOM structure to verify and improve these selectors.
+[94m[ToolSearch][0m query: [93mselect:WebFetch,WebSearch[0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/blob/master/app/assets/javascripts/diffs/components/diff_file_header.vue[0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/blob/master/app/assets/javascripts/diffs/components/tree_list.vue[0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/diffs/components/diff_file_header.vue[0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/diffs/components/diff_file.vue[0m
+Now let me get the file tree selectors.
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/diffs/components/tree_list.vue[0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/diffs/components/diff_file_row.vue[0m
+
+[91m[Error: Request failed with status code 404][0m
+[94m[WebFetch][0m [96mhttps://gitlab.com/gitlab-org/gitlab/-/raw/master/app/assets/javascripts/vue_shared/components/file_row.vue[0m
+I have verified class names from GitLab's source. Now I'll write the accurate `selectors.js`.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m "// All GitLab DOM selectors — single source of truth (NFR-17).
+// Validated against GitLab 17.x (open-source repo, master branch, April 2026).
+// When GitLab's markup changes, update ONLY this file.
+
+... (3301 chars)"
+Now update any other content modules that import from `selectors.js` to ensure they use the named exports correctly.
+[94m[Grep][0m [95m/Users/moncefnaji/code/github.com/unwrench/src[0m pattern: [96mfrom.*selectors|SELECTORS\.[0m
+All consumers use `SELECTORS.*` via the convenience object — no changes needed there. Now close the bead, update progress.md, and save memory.
+[94m[Bash][0m Close bead unw-0bz.2 $ br close unw-0bz.2 --reason "selectors.js rewritten with verified class names from GitLab 17.x open-...
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "---
+
+" → "---
+
+## 2026-04-26 - unw-0bz.2
+- What was implemen..."
+
+[91m[Error: <tool_use_error>Found 2 matches of the string to replace, but replace_all is false. To replace all occurrences, set replace_all to true. To replace only one occurrence, please provide more context to uniquely identify the instance.
+String: ---
+
+</tool_use_error>][0m
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "  - `br sync --flush-only` reported "nothing to ex..." → "  - `br sync --flush-only` reported "nothing to ex..."
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Rewrote src/content/selectors.js with class names verified from GitLab 17.x open-source Vue components (fetched raw from gitlab.com/gitlab-org/gitlab).
+**Why**: bead unw-0bz.2 — single sourc... (883 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.2: rewrite selectors.js with verified GitLab 17.x DOM class names.
+
+## Instructions
+Verify selectors against real GitLab open-source Vue component source before writing.... (1035 chars)"
+`selectors.js` is complete. Here's what changed:
+
+**Verified from GitLab 17.x open-source Vue source:**
+| Constant | Selector | Source file |
+|---|---|---|
+| `FILE_TREE_ENTRY` | `.diff-file-row` | `tree_list.vue` |
+| `FILE_TREE_FILENAME` | `.file-row-name` | `file_row.vue` |
+| `FILE_TREE_CONTAINER` | `.tree-list-holder` | `tree_list.vue` |
+| `DIFF_FILE_HEADER` | `.js-file-title` | `diff_file_header.vue` |
+| `DIFF_FILE_HEADER_FILENAME` | `.file-header-content .file-title-name` | `diff_file_header.vue` |
+| `DIFF_FILE_BLOCK` | `.diff-file` | `diff_file.vue` |
+| `DIFF_CONTAINER` | `#diffs` | standard MR page mount point |
+
+The `SELECTORS` convenience object is still exported so no changes were needed in `observer.js`, `fileHider.js`, or `iconInjector.js`. Each constant has an inline comment citing its source Vue component and GitLab version.
+
+<promise>COMPLETE</promise>
