@@ -89,10 +89,10 @@ function applyFeatures(diffFiles, ctx) {
   }
 
   if (_toggleState.autoViewed) {
-    const blobShas = diffFiles
+    const generatedFiles = diffFiles
       .filter(f => _generatedPaths.has(f.path) && f.blobId)
-      .map(f => f.blobId);
-    markAsViewed(ctx.namespace, ctx.mrIid, blobShas);
+      .map(f => ({ filePath: f.path, blobId: f.blobId }));
+    markAsViewed(generatedFiles, ctx.mrPath);
   }
 }
 

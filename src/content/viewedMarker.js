@@ -1,26 +1,18 @@
-// Writes blob SHAs of generated files to GitLab's localStorage Viewed array (FR-18 – FR-20).
+// Writes blob SHAs of generated files to GitLab's localStorage Viewed array (FR-17 – FR-20).
 
 /**
- * Returns the localStorage key GitLab uses for the MR Viewed state.
- * @param {string} namespace  e.g. "/mygroup/myproject"
- * @param {string} mrIid
- * @returns {string}
- */
-function localStorageKey(namespace, mrIid) {
-  return `code-review-${namespace}/-/merge_requests/${mrIid}`;
-}
-
-/**
- * Marks the given blob SHAs as Viewed in GitLab's localStorage.
- * Deduplicates the array before writing (FR-18).
+ * Marks the given generated files as Viewed in GitLab's localStorage.
+ * Reads the existing SHA array, appends missing blob SHAs, and writes back.
+ * Deduplicates — never removes existing SHAs (FR-20).
  *
- * @param {string} namespace
- * @param {string} mrIid
- * @param {string[]} blobShas
+ * @param {Array<{ filePath: string, blobId: string }>} generatedFiles
+ * @param {string} mrPath  Full MR path, e.g. '/mygroup/myproject/-/merge_requests/42'
  */
-export function markAsViewed(namespace, mrIid, blobShas) {
+export function markAsViewed(generatedFiles, mrPath) {
+  const blobShas = generatedFiles.map(f => f.blobId).filter(Boolean);
   if (!blobShas.length) return;
-  const key = localStorageKey(namespace, mrIid);
+
+  const key = `code-review-${mrPath}`;
   let existing = [];
   try {
     existing = JSON.parse(localStorage.getItem(key) || '[]');
@@ -28,6 +20,7 @@ export function markAsViewed(namespace, mrIid, blobShas) {
   } catch {
     existing = [];
   }
+
   const merged = Array.from(new Set([...existing, ...blobShas]));
   localStorage.setItem(key, JSON.stringify(merged));
 }

@@ -90,3 +90,12 @@ after each iteration and it's included in prompts for context.
   - `MutationObserver` with module-level state (for `startObserving`) vs. caller-owned state (for `startObserver`) serve different usage patterns; both patterns are valid depending on whether the caller or the module manages lifecycle.
 ---
 
+## 2026-04-26 - unw-0bz.9
+- What was implemented: Rewrote `src/content/viewedMarker.js` with signature `markAsViewed(generatedFiles, mrPath)` per bead spec. Takes `Array<{ filePath, blobId }>` + full `mrPath` string. localStorage key is `code-review-${mrPath}`. Reads existing array, appends missing SHAs (deduplicates via Set), writes back. Never removes existing SHAs (FR-20). Also fixed `index.js` call site which was using non-existent `ctx.namespace` and `ctx.mrIid` — now passes correct `generatedFiles` array and `ctx.mrPath`.
+- Files changed: `src/content/viewedMarker.js`, `src/content/index.js`
+- **Learnings:**
+  - The scaffold's `markAsViewed(namespace, mrIid, blobShas)` signature didn't match the bead spec AND `index.js` was calling it with `ctx.namespace` (a field that doesn't exist on the mrContext return value — `mrPath` does).
+  - Always verify that index.js call sites use field names that actually exist on the context object returned by mrContext.js.
+  - The toggle check (`autoViewed`) belongs in the orchestrator (`index.js`), not inside `markAsViewed` — keeps the marker module pure (just does the localStorage write).
+---
+

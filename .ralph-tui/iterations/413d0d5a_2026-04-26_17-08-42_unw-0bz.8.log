@@ -1,0 +1,85 @@
+# Iteration 8 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.8
+- **Task Title**: US-08: iconInjector.js + observer.js — wrench icon injection with MutationObserver
+- **Description**: Implement the wrench icon injector and the MutationObserver that keeps icons in sync with GitLab's incremental DOM loading (FR-13 – FR-16, NFR-03).
+
+## Scope
+
+### iconInjector.js
+Export:
+```js
+// gene...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:08:42.045Z
+- **Ended At**: 2026-04-26T21:11:14.769Z
+- **Duration**: 2m 32s
+- **Input Tokens**: 57
+- **Output Tokens**: 8221
+- **Total Tokens**: 8278
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+I'll start by reading the progress file and existing code to understand the patterns before implementing.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m
+Now let me read the existing scaffold files for iconInjector.js and observer.js.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/iconInjector.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/observer.js[0m
+Let me check `index.js` to see how these modules are consumed.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+I have a clear picture now. The scaffold exists and `index.js` already uses `syncIcons`/`removeAllIcons` and `startObserving`/`stopObserving`. I need to improve both modules:
+
+1. **iconInjector.js** — add `data-unwrench-icon` attribute (spec requirement), improve path extraction with additional fallbacks
+2. **observer.js** — looks complete; just verify it matches spec behavior
+
+Let me implement the improvements:
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/iconInjector.js[0m "// Injects wrench icons into the file tree and diff headers (FR-13, FR-14, FR-15, FR-16).
+
+import { SELECTORS } from './selectors.js';
+
+const ICON_ATTR = 'data-unwrench-icon';
+const ICON_TITLE = 'Gene... (3029 chars)"
+Now the observer.js — it's already correct, but let me add the spec-named exports as aliases too:
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/observer.js[0m "// MutationObserver for incremental diff loading (FR-15, FR-26, NFR-03).
+
+import { SELECTORS } from './selectors.js';
+
+const DEBOUNCE_MS = 50;
+
+// Module-level state for the primary observer used by i... (1822 chars)"
+Now let me verify `index.js` still imports correctly with the new aliases:
+[94m[Grep][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m pattern: [96msyncIcons|removeAllIcons|startObserving|stopObserving[0m
+All imports still resolve correctly — `syncIcons` and `removeAllIcons` are exported as aliases, `startObserving`/`stopObserving` are still the primary module-level API.
+
+Now let me close the bead and flush:
+[94m[Bash][0m Close bead unw-0bz.8 $ br close unw-0bz.8 --reason "iconInjector.js and observer.js fully implemented: data-unwrench-icon a...
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+Now let me append to progress.md:
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "  - All consumers use `SELECTORS.*` via the conven..." → "  - All consumers use `SELECTORS.*` via the conven..."
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Implemented `iconInjector.js` and `observer.js` for bead unw-0bz.8. Icon injection uses `data-unwrench-icon="true"` attribute for deduplication. Path extraction tries `data-path`, `data-file... (1224 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.8: iconInjector.js + observer.js — wrench icon injection with MutationObserver.
+
+## Instructions
+No bundler, vanilla ES modules. Use SELECTORS from selectors.js only. Ma... (1619 chars)"
+Bead unw-0bz.8 is complete. Here's what was done:
+
+**`iconInjector.js`** — rewrote the scaffold with:
+- `data-unwrench-icon="true"` attribute on each injected icon (spec requirement), used as the deduplication guard
+- `getPathFromTreeEntry` / `getPathFromDiffHeader` with multi-fallback path extraction (`data-path` → `data-file-path` → child element queries)
+- Spec-named exports: `injectIcons`, `removeStaleIcons`
+- Scaffold-named aliases: `injectAll`, `syncIcons`, `removeAllIcons` — so `index.js` imports are unbroken
+
+**`observer.js`** — kept module-level `startObserving`/`stopObserving` (primary API for `index.js`) and added spec-named `startObserver`/`stopObserver` (caller-owned observer reference) as additional exports.
+
+<promise>COMPLETE</promise>
