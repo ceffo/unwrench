@@ -32,6 +32,16 @@ after each iteration and it's included in prompts for context.
   - The scaffold was synchronous and missing `mrPath`/`sourceSha`; always check scaffold completeness against bead spec before skipping to close.
 ---
 
+## 2026-04-26 - unw-0bz.4
+- What was implemented: `apiInterceptor.js` (complete) with `injectFetchInterceptor()` (idempotent via `window.__GL_FETCH_INTERCEPTED__` sentinel) and `waitForDiffsMetadata()` returning a Promise. Added `interceptorBootstrap.js` — a non-module content script at `document_start` that injects the fetch wrapper before GitLab's Vue app runs (EC-07). Fixed `manifest.json` to declare `"type": "module"` for the `index.js` content script entry (required for ES module `import` syntax in content scripts).
+- Files changed: `src/content/apiInterceptor.js`, `src/content/interceptorBootstrap.js` (new), `manifest.json`
+- **Learnings:**
+  - Chrome MV3 content scripts with `import` statements require `"type": "module"` in the manifest `content_scripts` entry — without it, the browser rejects the script with a SyntaxError. The scaffold omitted this.
+  - `run_at: "document_start"` does **not** support `"type": "module"` in Chrome MV3. The bootstrap must be a plain IIFE-in-a-string injected via a `<script>` tag, not an ES module.
+  - Use a sentinel flag (`window.__GL_FETCH_INTERCEPTED__`) on the page context `window` to prevent double-wrapping when both the bootstrap and the fallback `injectFetchInterceptor()` might run.
+  - `postMessage` origin filter: always pass `"*"` as the targetOrigin when posting from page context to content script — the content script checks `event.source === window` instead.
+---
+
 ## 2026-04-26 - unw-0bz.2
 - What was implemented: Rewrote `src/content/selectors.js` with named exports verified against GitLab 17.x open-source Vue components. Added an exported convenience `SELECTORS` object for backward compat with existing modules.
 - Files changed: `src/content/selectors.js`

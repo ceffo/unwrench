@@ -1,0 +1,62 @@
+# Iteration 3 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.3
+- **Task Title**: US-03: mrContext.js — extract project ID, source branch, MR IID from page
+- **Description**: Implement the MR context extractor (PRD §5.3, FR-04). All API calls depend on having the project ID and source branch.
+
+## Scope
+Export an async `getMRContext()` function that returns:
+```js
+{ project...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T20:59:59.614Z
+- **Ended At**: 2026-04-26T21:01:16.328Z
+- **Duration**: 1m 16s
+- **Input Tokens**: 48
+- **Output Tokens**: 4749
+- **Total Tokens**: 4797
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_search,mcp__plugin_engram_engram__mem_context[0m
+[94m[mcp__plugin_engram_engram__mem_search][0m query: [93munw-0bz.3 mrContext[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+Let me check the existing scaffold for mrContext.js.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/mrContext.js[0m
+The scaffold is incomplete — it's synchronous, missing `mrPath` and `sourceSha`, and doesn't integrate the API fallback into `getMRContext()`. I'll rewrite it now.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/mrContext.js[0m "// Extracts MR metadata (project ID, source branch, MR IID, MR path, source SHA) from the GitLab page.
+
+/**
+ * Returns MR context for the current page, or null if not on an MR diffs page.
+ * Extractio... (2225 chars)"
+Now close the bead and sync:
+[94m[Bash][0m Close bead and sync to JSONL $ br close unw-0bz.3 --reason "Implemented async getMRContext() returning all 5 fields with gl global,...
+Now append to progress.md and save a memory:
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "## 2026-04-26 - unw-0bz.2" → "## 2026-04-26 - unw-0bz.3
+- What was implemented: ..."
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Rewrote src/content/mrContext.js with async `getMRContext()` returning `{ projectId, sourceBranch, mrIid, mrPath, sourceSha }`. Returns null on non-MR pages.
+**Why**: bead unw-0bz.3 — all AP... (925 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.3: async getMRContext() that extracts project ID, source branch, MR IID, MR path, and source SHA from the GitLab page.
+
+## Instructions
+Extraction priority: gl global → ... (993 chars)"
+Done. `src/content/mrContext.js` now exports an async `getMRContext()` that returns all 5 required fields:
+
+- **`projectId`** — from `window.gl.projectId` or `document.body.dataset.projectId`
+- **`sourceBranch`** — from `gl.mrMetadata`, `gl.mr`, `<meta>` tags, or body data attrs
+- **`mrIid`** — parsed from URL path
+- **`mrPath`** — e.g. `/mygroup/myproject/-/merge_requests/42` (used as localStorage key suffix)
+- **`sourceSha`** — from `gl.mrMetadata.headSha` or API fallback (may be null)
+
+Returns `null` on non-MR pages. Falls back to `GET /api/v4/projects/:id/merge_requests/:iid` when the gl global is incomplete.
+
+<promise>COMPLETE</promise>

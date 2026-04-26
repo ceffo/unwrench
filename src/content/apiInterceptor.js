@@ -1,10 +1,16 @@
 // Wraps window.fetch in the page context to observe diffs_metadata.json responses.
 // Must be injected into the page context (not the isolated content script context)
 // so it intercepts GitLab's own fetch calls (FR-21, EC-07).
+//
+// interceptorBootstrap.js runs this at document_start as a non-module script.
+// This function is kept as a fallback in case the bootstrap did not run
+// (e.g. extension reloaded mid-session). A sentinel flag prevents double-wrapping.
 
 export function injectFetchInterceptor() {
   const script = document.createElement('script');
   script.textContent = `(function() {
+    if (window.__GL_FETCH_INTERCEPTED__) return;
+    window.__GL_FETCH_INTERCEPTED__ = true;
     const _origFetch = window.fetch;
     window.fetch = async function(...args) {
       const response = await _origFetch(...args);
