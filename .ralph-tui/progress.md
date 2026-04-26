@@ -61,6 +61,15 @@ after each iteration and it's included in prompts for context.
   - `parseAllGitattributes` derives `directory` by slicing everything before the last `/` in `path`; root `.gitattributes` (no slash) correctly yields `''`.
 ---
 
+## 2026-04-26 - unw-0bz.7
+- What was implemented: `src/content/fileMatcher.test.js` — 18 Node built-in `node:test` tests covering `isGenerated` (root patterns, nested scope, last-match-wins negation, `**` glob, anchored `/` patterns, `?` wildcard) and `classifyFiles`. Fixed a bug in the existing scaffold's `patternToRegex`: leading `/` was stripped then pattern was treated as no-slash, incorrectly allowing subdirectory matches. Fix: track `anchored` separately and only set `noSlash = true` when the pattern is neither anchored nor contains `/`.
+- Files changed: `src/content/fileMatcher.test.js` (new), `src/content/fileMatcher.js` (anchored-pattern bug fix)
+- **Learnings:**
+  - The scaffold's `noSlash` check (`!p.includes('/')`) was evaluated *after* stripping the leading `/`, losing the anchoring intent. Always preserve anchoring state before transforming the pattern string.
+  - Pattern `/foo.go` at directory `''` must produce `^foo\.go$`, not `^(?:.*/)?foo\.go$`.
+  - All other scaffold logic (scope guard, `**` placeholder swap, `escapeRegex`) was correct and needed no changes.
+---
+
 ## 2026-04-26 - unw-0bz.2
 - What was implemented: Rewrote `src/content/selectors.js` with named exports verified against GitLab 17.x open-source Vue components. Added an exported convenience `SELECTORS` object for backward compat with existing modules.
 - Files changed: `src/content/selectors.js`
