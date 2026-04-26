@@ -12,6 +12,11 @@ Full spec: `docs/gitlab-mr-review-helper-prd.md`
 Task board: `br list --status=open` (beads-rust tracker, epic `unw-0bz`)  
 Dev patterns: `.ralph-tui/progress.md`
 
+## Code navigation 
+
+Prefer using the /file-search plugin instead of ad-hoc methods 
+
+
 ## Memory — Hard Rule
 
 **Never create, read, or write memory files** (notes.md, findings.md, session-notes.md, MEMORY.md, or any ad-hoc `.md` scratch file). All persistent memory goes through the **engram plugin** exclusively:

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitLab MR Review Helper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>GitLab MR Review Helper</h1>
+    <p class="version">v1.0.0</p>
+  </header>
+
+  <main>
+    <p id="status" class="status">Checking page…</p>
+
+    <div class="toggle-row">
+      <label for="toggle-viewed">
+        <span class="toggle-label">Auto-mark generated files as Viewed</span>
+        <span class="toggle-desc">Collapses generated files when you open any MR.</span>
+      </label>
+      <input type="checkbox" id="toggle-viewed" role="switch" />
+    </div>
+
+    <div class="toggle-row">
+      <label for="toggle-hide">
+        <span class="toggle-label">Hide generated files from diff view</span>
+        <span class="toggle-desc">Removes generated files from the file tree and diff entirely.</span>
+      </label>
+      <input type="checkbox" id="toggle-hide" role="switch" />
+    </div>
+
+    <p class="note">Toggles apply globally to all MRs on all GitLab instances.</p>
+  </main>
+
+  <script src="popup.js" type="module"></script>
+</body>
+</html>

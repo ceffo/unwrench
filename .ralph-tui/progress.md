@@ -1,66 +1,24 @@
-## Codebase Patterns
+# Ralph Progress Log
 
-> This section is read by every agent iteration. Keep it up to date with patterns, gotchas, and decisions.
+This file tracks progress across iterations. Agents update this file
+after each iteration and it's included in prompts for context.
 
-### Project overview
-Chrome extension (Manifest V3, Chrome 120+, vanilla JS, no bundler) that marks and optionally hides generated files on GitLab MR diff pages. Source of truth: `docs/gitlab-mr-review-helper-prd.md`.
+## Codebase Patterns (Study These First)
 
-### File layout (PRD §5.1)
-```
-manifest.json
-src/
-  background.js           — MV3 service worker (minimal)
-  content/
-    index.js              — orchestrator, entry point
-    mrContext.js          — extract projectId / sourceBranch / mrIid from page
-    apiInterceptor.js     — intercept diffs_metadata.json via page-context fetch wrap
-    gitattributesLoader.js — fetch + cache .gitattributes from GitLab API
-    gitattributesParser.js — pure function, no browser deps, Node-testable
-    fileMatcher.js         — pure function, no browser deps, Node-testable
-    iconInjector.js        — inject 🔧 icons, tag with data-unwrench-icon
-    fileHider.js           — detach/restore DOM nodes, tag with data-unwrench-hidden
-    viewedMarker.js        — write blob SHAs to GitLab localStorage
-    observer.js            — MutationObserver with 50ms debounce
-    selectors.js           — ALL GitLab DOM selectors live here, nowhere else
-  popup/
-    popup.html / popup.js / popup.css
-icons/
-  icon16.png / icon48.png / icon128.png
-README.md
-```
-
-### Hard constraints (break these = broken extension or CSP rejection)
-- **No `eval`** anywhere. No `innerHTML` for API-derived content (NFR-13).
-- **No inline scripts/styles** in popup.html (Chrome CSP blocks them).
-- **All DOM selectors** in `src/content/selectors.js` only — never hardcoded inline (NFR-17).
-- **`gitattributesParser.js` and `fileMatcher.js`** must have zero `chrome.*`, `document`, or `window` imports — they must run under bare `node --test` (NFR-18).
-- **`apiInterceptor.js`** must inject into the **page context** (not the isolated content-script context) because GitLab's own fetch is same-origin and invisible to the content script's `window.fetch`. Use a `<script>` element injection or `chrome.scripting.executeScript` with `world: "MAIN"`. Communicate back via `window.postMessage`.
-- **`chrome.storage.sync`** for toggle prefs (survives across devices/restarts). **`chrome.storage.session`** for .gitattributes cache (keyed by `${projectId}:${sourceSha}`).
-
-### GitLab localStorage key format (PRD §5.5)
-```
-key:   code-review-/namespace/project/-/merge_requests/42
-value: ["sha1", "sha2", ...]   (JSON array of blob SHA strings)
-```
-
-### MR context extraction (PRD §5.3)
-Priority order: `window.gl.projectId` → URL parsing → `<meta name="current-branch">` → fallback API call to `GET /api/v4/projects/:id/merge_requests/:iid`.
-
-### API rate limiting (NFR-05)
-Max 1 GitLab API request per second per tab. Max 10 concurrent tree-fetch requests (NFR-04).
-
-### MutationObserver (NFR-03)
-Options: `{ childList: true, subtree: true }`. Debounce callback 50ms.
-
-### SPA navigation (NFR-08)
-GitLab is a SPA. When URL changes to a different MR, run `cleanup()` (stop observer, remove icons, restore hidden elements, clear module-level maps) then re-run full init.
-
-### Node unit tests
-```bash
-node --test src/content/gitattributesParser.test.js
-node --test src/content/fileMatcher.test.js
-```
+- **No bundler**: All JS is vanilla ES modules loaded directly by Chrome. `import` paths must be relative (e.g. `./selectors.js`), not bare specifiers.
+- **Page-context injection**: `apiInterceptor.js` creates a `<script>` element and immediately removes it — the only way to wrap `window.fetch` in the page context from a content script.
+- **Pure modules for testing**: `gitattributesParser.js` and `fileMatcher.js` have zero browser/DOM imports so they can be `node --test`ed directly.
+- **Single selector file**: All GitLab DOM selectors live exclusively in `src/content/selectors.js` — never inline them in other modules.
+- **chrome.storage.session** (not `localStorage`) for per-session `.gitattributes` cache — survives tab navigations but clears on browser restart.
 
 ---
 
-<!-- Iteration logs appended below by agents -->
+## 2026-04-26 - unw-0bz.1
+- What was implemented: Full project scaffold — manifest.json (MV3), all 11 content script modules, popup (HTML/JS/CSS), background service worker, 3 placeholder PNG icons, README.md skeleton.
+- Files changed: `manifest.json`, `src/background.js`, `src/content/index.js`, `mrContext.js`, `apiInterceptor.js`, `gitattributesLoader.js`, `gitattributesParser.js`, `fileMatcher.js`, `iconInjector.js`, `fileHider.js`, `viewedMarker.js`, `observer.js`, `selectors.js`, `src/popup/popup.html`, `popup.js`, `popup.css`, `icons/icon{16,48,128}.png`, `README.md`
+- **Learnings:**
+  - MV3 background service worker cannot use `chrome.tabs` without the `tabs` permission — used `tabs` query in background only to relay storage changes; check if `tabs` permission is needed at manifest level (currently not declared — will need to add if background tab relay is required).
+  - PNG icons must be valid binary PNG; generated programmatically with Python/zlib since no image editor available in this env.
+  - `br sync --flush-only` reported "nothing to export" after `br close` — likely because the close already wrote to JSONL. This is normal.
+---
+

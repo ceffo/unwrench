@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "sessionId": "413d0d5a-bc7c-4f54-9113-378791cc5022",
+  "status": "running",
+  "startedAt": "2026-04-26T20:52:31.209Z",
+  "updatedAt": "2026-04-26T20:57:29.109Z",
+  "currentIteration": 0,
+  "maxIterations": 20,
+  "tasksCompleted": 0,
+  "isPaused": false,
+  "agentPlugin": "claude",
+  "trackerState": {
+    "plugin": "beads-rust",
+    "epicId": "unw-0bz",
+    "totalTasks": 13,
+    "tasks": [
+      {
+        "id": "unw-0bz.1",
+        "title": "US-01: Project scaffold — manifest.json, directory structure, icons",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.2",
+        "title": "US-02: selectors.js — all GitLab DOM selectors as named constants",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.3",
+        "title": "US-03: mrContext.js — extract project ID, source branch, MR IID from page",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.4",
+        "title": "US-04: apiInterceptor.js — intercept diffs_metadata.json via page-context fetch wrapper",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.5",
+        "title": "US-05: gitattributesLoader.js — fetch + cache .gitattributes from GitLab API",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.6",
+        "title": "US-06: gitattributesParser.js — parse .gitattributes text into pattern list + Node unit tests",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.7",
+        "title": "US-07: fileMatcher.js — classify file paths against pattern list + Node unit tests",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.8",
+        "title": "US-08: iconInjector.js + observer.js — wrench icon injection with MutationObserver",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.9",
+        "title": "US-09: viewedMarker.js — write blob SHAs of generated files to GitLab localStorage",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.10",
+        "title": "US-10: fileHider.js — DOM remove/restore generated file blocks and tree entries",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.11",
+        "title": "US-11: Popup UI — toggles, status line, host config, chrome.storage.sync persistence",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.12",
+        "title": "US-12: content/index.js + background.js — orchestration, SPA navigation, storage bridge",
+        "status": "open",
+        "completedInSession": false
+      },
+      {
+        "id": "unw-0bz.13",
+        "title": "US-13: Integration testing, edge cases, README completion",
+        "status": "open",
+        "completedInSession": false
+      }
+    ]
+  },
+  "iterations": [],
+  "skippedTaskIds": [],
+  "cwd": "/Users/moncefnaji/code/github.com/unwrench",
+  "activeTaskIds": [],
+  "subagentPanelVisible": false
+}
