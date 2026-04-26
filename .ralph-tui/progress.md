@@ -22,3 +22,13 @@ after each iteration and it's included in prompts for context.
   - `br sync --flush-only` reported "nothing to export" after `br close` — likely because the close already wrote to JSONL. This is normal.
 ---
 
+## 2026-04-26 - unw-0bz.2
+- What was implemented: Rewrote `src/content/selectors.js` with named exports verified against GitLab 17.x open-source Vue components. Added an exported convenience `SELECTORS` object for backward compat with existing modules.
+- Files changed: `src/content/selectors.js`
+- **Learnings:**
+  - GitLab's confirmed class names (from live source): `.diff-file-row` (tree row), `.file-row-name` (filename in tree), `.tree-list-holder` (tree container), `.js-file-title` (diff header), `.file-header-content .file-title-name` (filename in header), `.diff-file` (full block), `#diffs` (root container).
+  - GitLab also exposes `data-testid` attributes (`file-title-container`, `file-name-content`) which are more stable; documented in selector comments but not used as primary selectors to keep queries simple.
+  - Fetching GitLab raw Vue source at `gitlab.com/gitlab-org/gitlab/-/raw/master/...` works without auth for public files.
+  - All consumers use `SELECTORS.*` via the convenience object — no import changes needed.
+---
+

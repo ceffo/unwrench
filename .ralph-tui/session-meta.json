@@ -2,13 +2,13 @@
   "id": "413d0d5a-bc7c-4f54-9113-378791cc5022",
   "status": "running",
   "startedAt": "2026-04-26T20:52:30.554Z",
-  "updatedAt": "2026-04-26T20:52:30.554Z",
+  "updatedAt": "2026-04-26T20:57:29.316Z",
   "agentPlugin": "claude",
   "trackerPlugin": "beads-rust",
   "epicId": "unw-0bz",
-  "currentIteration": 0,
+  "currentIteration": 1,
   "maxIterations": 20,
   "totalTasks": 0,
-  "tasksCompleted": 0,
+  "tasksCompleted": 1,
   "cwd": "/Users/moncefnaji/code/github.com/unwrench"
 }

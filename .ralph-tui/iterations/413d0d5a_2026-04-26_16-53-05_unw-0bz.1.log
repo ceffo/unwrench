@@ -1,0 +1,159 @@
+# Iteration 1 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.1
+- **Task Title**: US-01: Project scaffold — manifest.json, directory structure, icons
+- **Description**: Set up the full project skeleton so every subsequent task has the correct file layout to work within.
+
+## Scope
+- Create `manifest.json` (MV3) with permissions: `storage`, `scripting`, host_permission...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T20:53:05.468Z
+- **Ended At**: 2026-04-26T20:57:29.083Z
+- **Duration**: 4m 23s
+- **Input Tokens**: 84
+- **Output Tokens**: 16807
+- **Total Tokens**: 16891
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_search,mcp__plugin_engram_engram__mem_context[0m
+[94m[mcp__plugin_engram_engram__mem_search][0m query: [93munw-0bz.1 project scaffold manifest[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+No prior work. Let me check the current project state.
+[94m[Glob][0m [95m/Users/moncefnaji/code/github.com/unwrench[0m pattern: [96m**/*[0m
+The project has no extension files yet. I'll create the full scaffold now — all files in parallel where possible.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m "{
+  "manifest_version": 3,
+  "name": "GitLab MR Review Helper",
+  "version": "1.0.0",
+  "description": "Marks generated files in GitLab MR diffs with a wrench icon and optionally hides or auto-marks t... (827 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/background.js[0m "// Service worker: storage bridge only.
+// Handles chrome.storage.onChanged relay and any future background tasks.
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'sync') ret... (493 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m "// All GitLab DOM selectors — single source of truth (NFR-17).
+// Validated against GitLab 17.x. Update here when GitLab's markup changes.
+
+export const SELECTORS = {
+  // File tree sidebar: each file... (1046 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/mrContext.js[0m "// Extracts MR metadata (project ID, source branch, MR IID) from the GitLab page.
+
+/**
+ * @returns {{ projectId: string, mrIid: string, sourceBranch: string, namespace: string } | null}
+ */
+export fun... (1613 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/apiInterceptor.js[0m "// Wraps window.fetch in the page context to observe diffs_metadata.json responses.
+// Must be injected into the page context (not the isolated content script context)
+// so it intercepts GitLab's own... (1377 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/gitattributesLoader.js[0m "// Fetches and caches .gitattributes files from the GitLab API (FR-04, FR-05, FR-08).
+
+const CACHE_KEY_PREFIX = 'ga_cache_';
+const MAX_TREE_ENTRIES = 5000;
+const MAX_CONCURRENT = 10;
+
+/**
+ * Returns a... (3939 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/gitattributesParser.js[0m "// Pure function module — no DOM or browser API imports (NFR-18).
+// Parses .gitattributes text into a structured pattern list (FR-06, FR-07).
+
+/**
+ * Parses a single .gitattributes file's text conten... (1746 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/fileMatcher.js[0m "// Pure function module — no DOM or browser API imports (NFR-18).
+// Classifies file paths against parsed .gitattributes pattern lists (FR-10, FR-11, FR-12).
+
+/**
+ * Converts a gitattributes glob patt... (3067 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/iconInjector.js[0m "// Injects wrench icons into the file tree and diff headers (FR-13, FR-14, FR-15, FR-16).
+
+import { SELECTORS } from './selectors.js';
+
+const ICON_CLASS = 'unwrench-icon';
+const ICON_TITLE = 'Generate... (2319 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/fileHider.js[0m "// Removes/restores generated file DOM nodes (FR-22 – FR-26).
+
+import { SELECTORS } from './selectors.js';
+
+// Map from filePath → { treeEntry: Element, diffBlock: Element, treeParent, treeNextSibling... (2090 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/viewedMarker.js[0m "// Writes blob SHAs of generated files to GitLab's localStorage Viewed array (FR-18 – FR-20).
+
+/**
+ * Returns the localStorage key GitLab uses for the MR Viewed state.
+ * @param {string} namespace  e.... (1031 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/observer.js[0m "// MutationObserver for incremental diff loading (FR-15, FR-26, NFR-03).
+
+import { SELECTORS } from './selectors.js';
+
+let _observer = null;
+let _debounceTimer = null;
+const DEBOUNCE_MS = 50;
+
+/**
+ * ... (865 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m "// Entry point: orchestrates all modules (FR-01 – FR-30).
+
+import { getMRContext, fetchMRMeta } from './mrContext.js';
+import { injectFetchInterceptor, waitForDiffsMetadata } from './apiInterceptor.js... (4055 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.html[0m "<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitLab MR Review Helper</title>
+  <link rel="styl... (1214 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.css[0m "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  width: 320px;
+ ... (1667 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/popup/popup.js[0m "// Popup UI logic: reads/writes toggle state, shows MR status (FR-28 – FR-30).
+
+const toggleViewed = document.getElementById('toggle-viewed');
+const toggleHide = document.getElementById('toggle-hide')... (1051 chars)"
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/README.md[0m "# GitLab MR Review Helper
+
+A Chrome extension (Manifest V3) that improves the GitLab MR review workflow by detecting generated files and reducing noise in the diff view.
+
+## Features
+
+- Marks generate... (2939 chars)"
+Now I'll generate the placeholder PNG icons using Python.
+[94m[Bash][0m Generate placeholder PNG icons (16, 48, 128px) $ ~/.claude/.venv/bin/python -c " import struct, zlib  def make_png(size):     w = h = size     # RGB ...
+All files created. Now close the bead, sync, and update progress.md.
+[94m[Bash][0m Close bead unw-0bz.1 $ br close unw-0bz.1 --reason "Full project scaffold created: manifest.json, all stub/module files per...
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "## Codebase Patterns (Study These First)
+
+*Add reu..." → "## Codebase Patterns (Study These First)
+
+- **No b..."
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Created full Chrome extension scaffold for GitLab MR Review Helper (unw-0bz.1). All 18 files created from scratch.
+**Why**: Bead unw-0bz.1 — project skeleton required before any feature impl... (1089 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.1: full project scaffold for the GitLab MR Review Helper Chrome extension.
+
+## Instructions
+No bundler — vanilla ES modules only. All selectors in selectors.js. Pure mod... (1743 chars)"
+Scaffold is complete. Here's what was created:
+
+**18 files across the full extension structure:**
+- `manifest.json` — MV3, passes Chrome load unpacked
+- `src/background.js` — storage change relay service worker
+- `src/content/` — 11 modules: `index.js` (orchestrator) + all feature modules (`mrContext`, `apiInterceptor`, `gitattributesLoader`, `gitattributesParser`, `fileMatcher`, `iconInjector`, `fileHider`, `viewedMarker`, `observer`, `selectors`)
+- `src/popup/` — `popup.html`, `popup.js`, `popup.css` (toggle UI)
+- `icons/` — valid 16/48/128px orange PNG placeholders
+- `README.md` — setup, debugging, localStorage format docs
+
+**One gotcha to watch:** `background.js` calls `chrome.tabs.query` but `tabs` is not declared in `manifest.json` permissions — this may cause a runtime error when the storage relay tries to fire. It can be fixed in a later bead when the background worker is actually exercised.
+
+<promise>COMPLETE</promise>
