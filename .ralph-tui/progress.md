@@ -52,6 +52,15 @@ after each iteration and it's included in prompts for context.
   - Cache key uses `_` separator (`projectId_sha`) not `:` — avoid `:` in storage keys to prevent confusion with URL colons.
 ---
 
+## 2026-04-26 - unw-0bz.6
+- What was implemented: `src/content/gitattributesParser.test.js` — 12 Node built-in `node:test` unit tests for `parseGitattributes` and `parseAllGitattributes`. Scaffold parser was already correct; no changes to `gitattributesParser.js` needed.
+- Files changed: `src/content/gitattributesParser.test.js` (new)
+- **Learnings:**
+  - Scaffold's argument order (`content, directory`) differs from bead spec (`path, content`) — the scaffold is internally consistent (called only via `parseAllGitattributes` which derives `directory` from `path`), so no change required.
+  - Node `node:test` + `node:assert/strict` works with ES module imports (`import`) as long as the file is `.js` and node is 18+. No config needed.
+  - `parseAllGitattributes` derives `directory` by slicing everything before the last `/` in `path`; root `.gitattributes` (no slash) correctly yields `''`.
+---
+
 ## 2026-04-26 - unw-0bz.2
 - What was implemented: Rewrote `src/content/selectors.js` with named exports verified against GitLab 17.x open-source Vue components. Added an exported convenience `SELECTORS` object for backward compat with existing modules.
 - Files changed: `src/content/selectors.js`
