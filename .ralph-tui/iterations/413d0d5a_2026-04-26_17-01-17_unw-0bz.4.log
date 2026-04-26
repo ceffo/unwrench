@@ -1,0 +1,77 @@
+# Iteration 4 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.4
+- **Task Title**: US-04: apiInterceptor.js — intercept diffs_metadata.json via page-context fetch wrapper
+- **Description**: Implement the fetch interceptor that observes GitLab's own `diffs_metadata.json` request (FR-21, PRD §5.4). This is needed to obtain blob SHAs for the viewedMarker and file paths for classification.
+
+...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:01:17.991Z
+- **Ended At**: 2026-04-26T21:04:08.364Z
+- **Duration**: 2m 50s
+- **Input Tokens**: 66
+- **Output Tokens**: 9690
+- **Total Tokens**: 9756
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_search,mcp__plugin_engram_engram__mem_context[0m
+[94m[mcp__plugin_engram_engram__mem_search][0m query: [93mapiInterceptor unw-0bz.4 diffs_metadata[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/apiInterceptor.js[0m
+The file already exists from the scaffold. Let me verify the manifest timing configuration and check if the implementation covers EC-07's `document_start` requirement.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+The `apiInterceptor.js` core logic from the scaffold is correct, but I need to fix two issues:
+1. The manifest is missing `"type": "module"` for content scripts — ES module imports in `index.js` won't work without it
+2. EC-07 requires the interceptor to inject at `document_start`, not `document_idle`
+
+The clean solution: a tiny non-module bootstrap script at `document_start` that only injects the fetch wrapper, keeping the full module in `apiInterceptor.js` for `waitForDiffsMetadata()`.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/apiInterceptor.js[0m
+The interceptor IIFE code in `apiInterceptor.js` is exactly what should run at `document_start`. I'll create a non-module bootstrap that inlines the same wrapper, then fix the manifest.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/interceptorBootstrap.js[0m "// Non-module bootstrap script injected at document_start (EC-07).
+// Runs before the page's own scripts so the fetch wrapper is in place
+// before GitLab's Vue app makes the diffs_metadata.json reque... (964 chars)"
+Now update the manifest to: (1) add the bootstrap at `document_start`, (2) add `"type": "module"` to the main content script entry.
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/manifest.json[0m edit: "  "content_scripts": [
+    {
+      "matches": ["<a..." → "  "content_scripts": [
+    {
+      "matches": ["<a..."
+The bootstrap and `index.js` both call `injectFetchInterceptor()`, which would double-wrap `window.fetch`. I need to make the injected script idempotent with a sentinel flag, and since the bootstrap now handles injection, update `apiInterceptor.js` to guard against double-wrapping.
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/apiInterceptor.js[0m edit: "// Wraps window.fetch in the page context to obser..." → "// Wraps window.fetch in the page context to obser..."
+Now update the bootstrap to also set the sentinel flag, so the fallback in `injectFetchInterceptor()` sees it and skips re-wrapping.
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/interceptorBootstrap.js[0m "// Non-module bootstrap script injected at document_start (EC-07).
+// Runs before the page's own scripts so the fetch wrapper is in place
+// before GitLab's Vue app makes the diffs_metadata.json reque... (1239 chars)"
+Now close the bead, sync, and update progress.md.
+[94m[Bash][0m Close bead unw-0bz.4 $ manifest fixed with type:module for content scripts"
+[94m[Bash][0m Flush beads state to JSONL $ br sync --flush-only
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "## 2026-04-26 - unw-0bz.2" → "## 2026-04-26 - unw-0bz.4
+- What was implemented: ..."
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Completed `src/content/apiInterceptor.js` with idempotent `injectFetchInterceptor()` (sentinel flag `window.__GL_FETCH_INTERCEPTED__`) and `waitForDiffsMetadata()` Promise. Added `src/conten... (1146 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.4: apiInterceptor.js — intercept diffs_metadata.json via page-context fetch wrapper.
+
+## Instructions
+No bundler, vanilla ES modules. No eval (NFR-13). Interceptor must ... (1747 chars)"
+Done. Here's what changed for unw-0bz.4:
+
+**Files changed:**
+- `src/content/apiInterceptor.js` — added `window.__GL_FETCH_INTERCEPTED__` sentinel to `injectFetchInterceptor()` so it's safe to call multiple times; `waitForDiffsMetadata()` was already correct
+- `src/content/interceptorBootstrap.js` (new) — plain non-module IIFE that runs at `document_start`, injecting the same fetch wrapper with the sentinel flag (satisfies EC-07)
+- `manifest.json` — two fixes: added `"type": "module"` to the `index.js` content script entry (ES module `import` won't work without it), and added the bootstrap as a second entry at `document_start`
+
+**Key gotchas:**
+- `run_at: "document_start"` + `"type": "module"` is not supported in Chrome MV3 — the bootstrap must be a plain script
+- Without `"type": "module"` in the manifest, `import` statements in content scripts fail silently — this was a scaffold bug
+
+<promise>COMPLETE</promise>

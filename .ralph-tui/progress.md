@@ -42,6 +42,16 @@ after each iteration and it's included in prompts for context.
   - `postMessage` origin filter: always pass `"*"` as the targetOrigin when posting from page context to content script — the content script checks `event.source === window` instead.
 ---
 
+## 2026-04-26 - unw-0bz.5
+- What was implemented: `src/content/gitattributesLoader.js` — `loadGitattributes(projectId, ref, sha)` async function. Checks `chrome.storage.session` cache (key: `ga_cache_<projectId>_<sha>`), falls back to recursive tree discovery + content fetch. Follows `X-Next-Page` pagination up to 5000 entries. Batches content fetches 10 at a time. 404 on root `.gitattributes` silently no-ops; other errors log to console.
+- Files changed: `src/content/gitattributesLoader.js` (already implemented in scaffold; verified complete)
+- **Learnings:**
+  - Implementation was already present from the unw-0bz.1 scaffold and required no changes — always verify scaffold completeness before starting implementation work.
+  - NFR-04 (max 10 concurrent) and NFR-05 (max 1 req/sec) are contradictory as stated; the implementation satisfies NFR-04 via batch chunking. Sequential tree pagination naturally rate-limits tree discovery; file content fetches are batched (10 at once).
+  - `chrome.storage.session` does not persist across browser restarts, making it ideal for per-session API response caching.
+  - Cache key uses `_` separator (`projectId_sha`) not `:` — avoid `:` in storage keys to prevent confusion with URL colons.
+---
+
 ## 2026-04-26 - unw-0bz.2
 - What was implemented: Rewrote `src/content/selectors.js` with named exports verified against GitLab 17.x open-source Vue components. Added an exported convenience `SELECTORS` object for backward compat with existing modules.
 - Files changed: `src/content/selectors.js`
