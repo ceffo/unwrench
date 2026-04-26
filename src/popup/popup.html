@@ -9,7 +9,7 @@
 <body>
   <header>
     <h1>GitLab MR Review Helper</h1>
-    <p class="version">v1.0.0</p>
+    <p id="version" class="version"></p>
   </header>
 
   <main>
@@ -31,7 +31,12 @@
       <input type="checkbox" id="toggle-hide" role="switch" />
     </div>
 
-    <p class="note">Toggles apply globally to all MRs on all GitLab instances.</p>
+    <div class="host-row">
+      <label for="host-url" class="host-label">GitLab host URL</label>
+      <input type="url" id="host-url" class="host-input" placeholder="https://gitlab.com" />
+    </div>
+
+    <p class="note">Settings apply globally to all GitLab MR pages.</p>
   </main>
 
   <script src="popup.js" type="module"></script>

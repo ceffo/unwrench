@@ -99,6 +99,17 @@ after each iteration and it's included in prompts for context.
   - The toggle check (`autoViewed`) belongs in the orchestrator (`index.js`), not inside `markAsViewed` — keeps the marker module pure (just does the localStorage write).
 ---
 
+## 2026-04-26 - unw-0bz.11
+- What was implemented: Popup UI (FR-28–FR-30, NFR-16). Added host URL input to `popup.html`. Rewrote `popup.js` to read version from `chrome.runtime.getManifest()`, persist `gitlabHost` in `chrome.storage.sync`, query active tab via `GET_STATUS` message to show real generated file count. Added `GET_STATUS` message handler in `index.js` (returns `{ onMRPage, generatedCount }`). Added `tabs` permission to `manifest.json`. Added host input styles to `popup.css`.
+- Files changed: `src/popup/popup.html`, `src/popup/popup.js`, `src/popup/popup.css`, `src/content/index.js`, `manifest.json`
+- **Learnings:**
+  - Use `chrome.tabs.sendMessage` with a `GET_STATUS` request to content script to get real generated file count — avoids needing `tab.url` (which requires `tabs` permission for URL access).
+  - The `tabs` permission is required for `chrome.tabs.query` to return usable tab IDs from the popup context; add it explicitly.
+  - `chrome.runtime.onMessage.addListener` handler must return `false` (or nothing) for synchronous `sendResponse` — only return `true` if responding asynchronously.
+  - `gitlabHost` in `chrome.storage.sync` is a UX setting for user awareness; content script API calls use relative paths (same-origin) so the setting doesn't affect API fetch URLs directly.
+  - popup.js notifies the active tab's content script directly via `sendMessage` on toggle change, bypassing the background-mediated `chrome.storage.onChanged` path — ensures immediate live propagation (FR-30).
+---
+
 ## 2026-04-26 - unw-0bz.10
 - What was implemented: `src/content/fileHider.js` — complete implementation of `hideGeneratedFiles(generatedPaths)` and `restoreHiddenFiles()`. Detaches tree entries and diff blocks from DOM, stores `{ parent, nextSibling }` refs for in-order restoration. Tags detached nodes with `data-unwrench-hidden` attribute to prevent double-hiding. Fixed guard so newly lazy-loaded nodes for already-tracked paths are also hidden (FR-26). Added spec-named exports alongside `hideAll`/`restoreAll` aliases used by index.js.
 - Files changed: `src/content/fileHider.js`

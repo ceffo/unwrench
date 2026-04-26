@@ -1,0 +1,63 @@
+# Iteration 10 Log
+
+## Metadata
+
+- **Task ID**: unw-0bz.10
+- **Task Title**: US-10: fileHider.js — DOM remove/restore generated file blocks and tree entries
+- **Description**: Implement the file hider/restorer (FR-22 – FR-27, PRD §3.6).
+
+## Scope
+Export:
+```js
+// generatedPaths: Set<string>
+// Removes generated file tree entries and diff blocks from DOM; stores refs for res...
+- **Status**: completed
+- **Task Completed**: Yes
+- **Promise Detected**: Yes
+- **Started At**: 2026-04-26T21:12:53.867Z
+- **Ended At**: 2026-04-26T21:14:37.272Z
+- **Duration**: 1m 43s
+- **Input Tokens**: 44
+- **Output Tokens**: 6461
+- **Total Tokens**: 6505
+- **Agent**: claude
+- **Model**: claude-sonnet-4-6
+- **Epic**: unw-0bz
+- **Sandbox Mode**: auto
+- **Sandbox Network**: Enabled
+--- RAW OUTPUT ---
+[94m[ToolSearch][0m query: [93mselect:mcp__plugin_engram_engram__mem_search,mcp__plugin_engram_engram__mem_save,mcp__plugin_engram_engram__mem_session_summary[0m
+[94m[mcp__plugin_engram_engram__mem_search][0m query: [93mfileHider unw-0bz.10[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+Let me read the existing fileHider.js scaffold and related files.
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/fileHider.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/selectors.js[0m
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/index.js[0m
+The scaffold is mostly complete but needs a few improvements per the bead spec:
+1. `data-unwrench-hidden` attribute tagging (spec requirement)
+2. Fix the `hideForPath` guard so newly lazy-loaded nodes for an already-tracked path still get hidden (FR-26)
+3. `data-file-path` fallback in `getPath` (consistent with iconInjector pattern)
+4. Spec-named exports `hideGeneratedFiles` / `restoreHiddenFiles` alongside existing `hideAll` / `restoreAll`
+[94m[Write][0m [95m/Users/moncefnaji/code/github.com/unwrench/src/content/fileHider.js[0m "// Removes/restores generated file DOM nodes (FR-22 – FR-26).
+
+import { SELECTORS } from './selectors.js';
+
+// Map from filePath → { treeEntry, treeParent, treeNextSibling, diffBlock, diffParent, diff... (2844 chars)"
+Now close the bead, flush, and update progress.md.
+[94m[Bash][0m Close bead and flush beads state $ br close unw-0bz.10 --reason "hideGeneratedFiles/restoreHiddenFiles implemented with data-unwrench-h...
+[94m[Read][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m
+[94m[Edit][0m [95m/Users/moncefnaji/code/github.com/unwrench/.ralph-tui/progress.md[0m edit: "  - The toggle check (`autoViewed`) belongs in the..." → "  - The toggle check (`autoViewed`) belongs in the..."
+[94m[mcp__plugin_engram_engram__mem_save][0m "**What**: Rewrote `src/content/fileHider.js` with `hideGeneratedFiles(generatedPaths)` and `restoreHiddenFiles()` per bead spec. Detaches tree entries and diff blocks from DOM; stores `{ parent, nextS... (1096 chars)"
+[94m[mcp__plugin_engram_engram__mem_session_summary][0m "## Goal
+Implement bead unw-0bz.10: fileHider.js — DOM remove/restore generated file blocks and tree entries.
+
+## Instructions
+Vanilla ES modules, no bundler. Use SELECTORS from selectors.js. Detach el... (1120 chars)"
+Done. Key changes to `fileHider.js`:
+
+- **FR-26 lazy-load fix**: replaced the `_hidden.has(filePath)` early-exit with per-element `!el.dataset.unwrenchHidden` guard — newly lazy-loaded diff blocks for already-tracked paths now get hidden on subsequent observer callbacks
+- **`data-unwrench-hidden` attribute**: set on removal, deleted on restore (cleanly removed from DOM)
+- **`_getPath` fallback**: `data-file-path` added alongside `data-path` (consistent with `iconInjector.js`)
+- **Spec-named exports**: `hideGeneratedFiles` / `restoreHiddenFiles` added; `hideAll` / `restoreAll` kept as aliases for the existing `index.js` imports
+
+<promise>COMPLETE</promise>

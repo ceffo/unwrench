@@ -3,7 +3,7 @@
   "name": "GitLab MR Review Helper",
   "version": "1.0.0",
   "description": "Marks generated files in GitLab MR diffs with a wrench icon and optionally hides or auto-marks them as Viewed.",
-  "permissions": ["storage", "scripting"],
+  "permissions": ["storage", "scripting", "tabs"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "src/popup/popup.html",

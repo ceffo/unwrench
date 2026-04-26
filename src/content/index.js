@@ -104,19 +104,28 @@ function cleanup() {
   _lastMRKey = null;
 }
 
-// Listen for storage changes (FR-30).
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type !== 'STORAGE_CHANGED') return;
-  const { autoViewed, autoHide } = msg.changes;
-  if (autoViewed !== undefined) _toggleState.autoViewed = autoViewed.newValue;
-  if (autoHide !== undefined) _toggleState.autoHide = autoHide.newValue;
-
-  if (_toggleState.autoHide) {
-    hideAll(_generatedPaths);
-  } else {
-    restoreAll();
+// Listen for messages from popup (FR-30).
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.type === 'GET_STATUS') {
+    sendResponse({
+      onMRPage: MR_DIFFS_RE.test(location.pathname),
+      generatedCount: _generatedPaths.size,
+    });
+    return false;
   }
-  syncIcons(_generatedPaths);
+
+  if (msg.type === 'STORAGE_CHANGED') {
+    const { autoViewed, autoHide } = msg.changes;
+    if (autoViewed !== undefined) _toggleState.autoViewed = autoViewed.newValue;
+    if (autoHide !== undefined) _toggleState.autoHide = autoHide.newValue;
+
+    if (_toggleState.autoHide) {
+      hideAll(_generatedPaths);
+    } else {
+      restoreAll();
+    }
+    syncIcons(_generatedPaths);
+  }
 });
 
 // SPA navigation: re-run when URL changes (FR-02).
