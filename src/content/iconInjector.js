@@ -1,8 +1,10 @@
 // Injects wrench icons into the file tree and diff headers (FR-13, FR-14, FR-15, FR-16).
+// Also dims generated file rows in the sidebar tree.
 
 import { SELECTORS } from './selectors.js';
 
 const ICON_ATTR = 'data-unwrench-icon';
+const DIM_ATTR = 'data-unwrench-dim';
 const ICON_TITLE = 'Generated file (gitlab-generated)';
 
 function createIcon() {
@@ -20,10 +22,6 @@ function injectIntoElement(el) {
   el.appendChild(createIcon());
 }
 
-/**
- * Returns the file path associated with a file tree entry element.
- * GitLab exposes path via data-path or data-file-path on the row root or a child.
- */
 function getPathFromTreeEntry(entry) {
   return (
     entry.dataset.path ||
@@ -34,10 +32,6 @@ function getPathFromTreeEntry(entry) {
   );
 }
 
-/**
- * Returns the file path associated with a diff file header element.
- * Falls back to the nearest .diff-file ancestor which typically carries data-path.
- */
 function getPathFromDiffHeader(header) {
   return (
     header.dataset.path ||
@@ -49,23 +43,27 @@ function getPathFromDiffHeader(header) {
 }
 
 /**
- * Injects wrench icons for all paths in generatedPaths that are currently in the DOM.
- * fileHashToPath maps file_hash (= data-file-row on tree entries) to full file paths.
+ * Injects wrench icons for generated files and dims their sidebar tree rows.
  * @param {Set<string>} generatedPaths
  * @param {Map<string,string>} fileHashToPath
  */
 export function injectIcons(generatedPaths, fileHashToPath = new Map()) {
-  // Tree sidebar: GitLab 18.x uses data-file-row (= file_hash) with no path attribute.
+  // Tree sidebar
   document.querySelectorAll(SELECTORS.FILE_TREE_ENTRY).forEach(entry => {
     const hash = entry.dataset.fileRow;
     const path = hash ? fileHashToPath.get(hash) : getPathFromTreeEntry(entry);
     if (path && generatedPaths.has(path)) {
       const nameEl = entry.querySelector(SELECTORS.FILE_TREE_FILENAME) || entry;
       injectIntoElement(nameEl);
+      // Dim the entire row so it recedes visually without disappearing.
+      if (!entry.dataset.unwrenchDim) {
+        entry.dataset.unwrenchDim = 'true';
+        entry.style.opacity = '0.4';
+      }
     }
   });
 
-  // Diff headers: data-path on the .diff-file ancestor block.
+  // Diff headers
   document.querySelectorAll(SELECTORS.DIFF_FILE_HEADER).forEach(header => {
     const path = getPathFromDiffHeader(header);
     if (path && generatedPaths.has(path)) {
@@ -75,25 +73,25 @@ export function injectIcons(generatedPaths, fileHashToPath = new Map()) {
   });
 }
 
-/** Alias for callers using the original scaffold name. */
 export const injectAll = injectIcons;
 
 /**
- * Removes all injected icons from the DOM.
+ * Removes all injected icons and sidebar dimming from the DOM.
  */
 export function removeAllIcons() {
   document.querySelectorAll(`[${ICON_ATTR}]`).forEach(el => el.remove());
+  document.querySelectorAll(`[${DIM_ATTR}]`).forEach(el => {
+    el.removeAttribute(DIM_ATTR);
+    el.style.opacity = '';
+  });
 }
 
 /**
- * Removes icons for files no longer in currentGeneratedPaths, then re-injects
- * icons for all current generated files (FR-16).
- * @param {Set<string>} currentGeneratedPaths
+ * Removes stale icons/dimming then re-injects for current generated paths (FR-16).
  */
 export function removeStaleIcons(currentGeneratedPaths, fileHashToPath = new Map()) {
   removeAllIcons();
   injectIcons(currentGeneratedPaths, fileHashToPath);
 }
 
-/** Alias for callers using the original scaffold name. */
 export const syncIcons = removeStaleIcons;
