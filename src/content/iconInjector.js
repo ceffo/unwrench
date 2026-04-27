@@ -49,33 +49,30 @@ function getPathFromDiffHeader(header) {
 }
 
 /**
- * Injects wrench icons for a specific file path into any matching DOM elements.
- * @param {string} filePath
+ * Injects wrench icons for all paths in generatedPaths that are currently in the DOM.
+ * fileHashToPath maps file_hash (= data-file-row on tree entries) to full file paths.
+ * @param {Set<string>} generatedPaths
+ * @param {Map<string,string>} fileHashToPath
  */
-export function injectForPath(filePath) {
+export function injectIcons(generatedPaths, fileHashToPath = new Map()) {
+  // Tree sidebar: GitLab 18.x uses data-file-row (= file_hash) with no path attribute.
   document.querySelectorAll(SELECTORS.FILE_TREE_ENTRY).forEach(entry => {
-    if (getPathFromTreeEntry(entry) === filePath) {
+    const hash = entry.dataset.fileRow;
+    const path = hash ? fileHashToPath.get(hash) : getPathFromTreeEntry(entry);
+    if (path && generatedPaths.has(path)) {
       const nameEl = entry.querySelector(SELECTORS.FILE_TREE_FILENAME) || entry;
       injectIntoElement(nameEl);
     }
   });
 
+  // Diff headers: data-path on the .diff-file ancestor block.
   document.querySelectorAll(SELECTORS.DIFF_FILE_HEADER).forEach(header => {
-    if (getPathFromDiffHeader(header) === filePath) {
+    const path = getPathFromDiffHeader(header);
+    if (path && generatedPaths.has(path)) {
       const nameEl = header.querySelector(SELECTORS.DIFF_FILE_HEADER_FILENAME) || header;
       injectIntoElement(nameEl);
     }
   });
-}
-
-/**
- * Injects wrench icons for all paths in generatedPaths that are currently in the DOM.
- * @param {Set<string>} generatedPaths
- */
-export function injectIcons(generatedPaths) {
-  for (const path of generatedPaths) {
-    injectForPath(path);
-  }
 }
 
 /** Alias for callers using the original scaffold name. */
@@ -93,9 +90,9 @@ export function removeAllIcons() {
  * icons for all current generated files (FR-16).
  * @param {Set<string>} currentGeneratedPaths
  */
-export function removeStaleIcons(currentGeneratedPaths) {
+export function removeStaleIcons(currentGeneratedPaths, fileHashToPath = new Map()) {
   removeAllIcons();
-  injectIcons(currentGeneratedPaths);
+  injectIcons(currentGeneratedPaths, fileHashToPath);
 }
 
 /** Alias for callers using the original scaffold name. */

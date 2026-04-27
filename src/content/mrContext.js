@@ -7,7 +7,7 @@
  * @returns {Promise<{ projectId: string, sourceBranch: string, mrIid: string, mrPath: string, sourceSha: string|null } | null>}
  */
 export async function getMRContext() {
-  const match = location.pathname.match(/^(\/[^/]+\/[^/]+)\/-\/merge_requests\/(\d+)/);
+  const match = location.pathname.match(/^(\/.+?)\/-\/merge_requests\/(\d+)/);
   if (!match) return null;
 
   const namespace = match[1]; // e.g. /mygroup/myproject
@@ -19,6 +19,7 @@ export async function getMRContext() {
   let projectId =
     gl.projectId ||
     document.body?.dataset?.projectId ||
+    gl.snowplowStandardContext?.data?.project_id ||
     null;
   if (projectId) projectId = String(projectId);
 

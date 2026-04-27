@@ -92,9 +92,9 @@ async function discoverGitattributesPaths(projectId, ref) {
 export async function loadGitattributes(projectId, ref, sha) {
   const key = cacheKey(projectId, sha);
 
-  // Check session cache first.
+  // Check local cache first (keyed by SHA so stale data can't occur).
   const cached = await new Promise((resolve) => {
-    chrome.storage.session.get(key, (result) => resolve(result[key] ?? null));
+    chrome.storage.local.get(key, (result) => resolve(result[key] ?? null));
   });
   if (cached !== null) return cached;
 
@@ -117,9 +117,9 @@ export async function loadGitattributes(projectId, ref, sha) {
     }
   }
 
-  // Cache result.
+  // Cache result in local storage (keyed by SHA — naturally expires when branch advances).
   await new Promise((resolve) => {
-    chrome.storage.session.set({ [key]: results }, resolve);
+    chrome.storage.local.set({ [key]: results }, resolve);
   });
 
   return results;

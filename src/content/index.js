@@ -1,7 +1,7 @@
 // Entry point: orchestrates all modules (FR-01 – FR-30).
 
 import { getMRContext } from './mrContext.js';
-import { injectFetchInterceptor, waitForDiffsMetadata } from './apiInterceptor.js';
+import { fetchDiffsMetadata } from './apiInterceptor.js';
 import { loadGitattributes } from './gitattributesLoader.js';
 import { parseAllGitattributes } from './gitattributesParser.js';
 import { classifyFiles } from './fileMatcher.js';
@@ -16,6 +16,7 @@ const MR_DIFFS_RE = /\/-\/merge_requests\/\d+\/diffs/;
 
 let _lastMRKey = null;
 let _generatedPaths = new Set();
+let _fileHashToPath = new Map();
 let _toggleState = { autoViewed: false, autoHide: false };
 
 async function getToggles() {
@@ -53,9 +54,6 @@ function waitForDiffContainer(timeoutMs = 5000) {
 async function run() {
   if (!MR_DIFFS_RE.test(location.pathname)) return;
 
-  // Inject fetch interceptor as early as possible (EC-07).
-  injectFetchInterceptor();
-
   // Get MR context — async, handles gl global, DOM attrs, and REST API fallback.
   const ctx = await getMRContext();
   if (!ctx) return;
@@ -77,7 +75,7 @@ async function run() {
   // Fetch gitattributes + diffs metadata + toggles in parallel.
   const [gaFiles, diffsMetadata, toggles] = await Promise.all([
     loadGitattributes(ctx.projectId, ctx.sourceBranch, ctx.sourceSha),
-    waitForDiffsMetadata(),
+    fetchDiffsMetadata(ctx.mrPath),
     getToggles(),
   ]);
 
@@ -90,8 +88,14 @@ async function run() {
   // Build file path + blob SHA map from diffs metadata.
   const diffFiles = (diffsMetadata?.diff_files || diffsMetadata?.diffs || []).map(f => ({
     path: f.new_path || f.old_path,
-    blobId: f.blob?.id || f.blob_id || null,
+    blobId: f.code_review_id || f.blob?.id || f.blob_id || null,
+    fileHash: f.file_hash || null,
   }));
+
+  // file_hash matches the data-file-row attribute on tree sidebar entries.
+  _fileHashToPath = new Map(
+    diffFiles.filter(f => f.fileHash).map(f => [f.fileHash, f.path]),
+  );
 
   const classifiedMap = classifyFiles(diffFiles.map(f => f.path), patternList);
 
@@ -109,7 +113,7 @@ async function run() {
 }
 
 function applyFeatures(diffFiles, ctx) {
-  syncIcons(_generatedPaths);
+  syncIcons(_generatedPaths, _fileHashToPath);
 
   if (_toggleState.autoHide) {
     hideAll(_generatedPaths);
@@ -128,6 +132,7 @@ function cleanup() {
   removeAllIcons();
   restoreAll();
   _generatedPaths = new Set();
+  _fileHashToPath = new Map();
   _lastMRKey = null;
 }
 
@@ -151,7 +156,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     } else {
       restoreAll();
     }
-    syncIcons(_generatedPaths);
+    syncIcons(_generatedPaths, _fileHashToPath);
   }
 });
 

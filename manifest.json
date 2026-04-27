@@ -20,14 +20,14 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/interceptorBootstrap.js"],
-      "run_at": "document_start"
-    },
+      "js": ["src/content/loader.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content/index.js"],
-      "run_at": "document_idle",
-      "type": "module"
+      "resources": ["src/content/*.js"],
+      "matches": ["<all_urls>"]
     }
   ],
   "icons": {

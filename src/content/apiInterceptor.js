@@ -1,44 +1,21 @@
-// Wraps window.fetch in the page context to observe diffs_metadata.json responses.
-// Must be injected into the page context (not the isolated content script context)
-// so it intercepts GitLab's own fetch calls (FR-21, EC-07).
-//
-// interceptorBootstrap.js runs this at document_start as a non-module script.
-// This function is kept as a fallback in case the bootstrap did not run
-// (e.g. extension reloaded mid-session). A sentinel flag prevents double-wrapping.
-
-export function injectFetchInterceptor() {
-  const script = document.createElement('script');
-  script.textContent = `(function() {
-    if (window.__GL_FETCH_INTERCEPTED__) return;
-    window.__GL_FETCH_INTERCEPTED__ = true;
-    const _origFetch = window.fetch;
-    window.fetch = async function(...args) {
-      const response = await _origFetch(...args);
-      const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url) || '';
-      if (url.includes('diffs_metadata.json')) {
-        response.clone().json().then(data => {
-          window.postMessage({ type: 'GL_DIFFS_METADATA', data }, '*');
-        }).catch(() => {});
-      }
-      return response;
-    };
-  })();`;
-  (document.head || document.documentElement).appendChild(script);
-  script.remove();
-}
+// Fetches diffs metadata directly from the GitLab API.
+// Previously used a page-context fetch interceptor, but GitLab's strict
+// script-src CSP blocks all inline script injection — so we just request
+// the JSON ourselves instead of trying to eavesdrop on GitLab's request.
 
 /**
- * Returns a Promise that resolves once with the diffs metadata payload.
- * @returns {Promise<object>}
+ * Fetches diffs_metadata.json for the given MR path.
+ * @param {string} mrPath  e.g. "/dev/libs/ssa-models/-/merge_requests/21"
+ * @returns {Promise<object|null>}
  */
-export function waitForDiffsMetadata() {
-  return new Promise((resolve) => {
-    function handler(event) {
-      if (event.source === window && event.data?.type === 'GL_DIFFS_METADATA') {
-        window.removeEventListener('message', handler);
-        resolve(event.data.data);
-      }
-    }
-    window.addEventListener('message', handler);
-  });
+export async function fetchDiffsMetadata(mrPath) {
+  try {
+    const res = await fetch(
+      `${mrPath}/diffs_metadata.json?diff_head=true&view=inline&w=1`,
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
